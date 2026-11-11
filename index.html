@@ -170,6 +170,28 @@
             </div>
         </div>
 
+        <!-- 📋 SKEMA MODEL JSON STANDAR (23 FIELD BAKU) -->
+        <div class="bg-slate-800/80 border border-indigo-500/40 rounded-2xl p-4 text-xs shadow-lg space-y-3">
+            <div class="flex items-center justify-between border-b border-indigo-500/20 pb-2">
+                <p class="text-indigo-300 font-bold flex items-center gap-1.5 text-sm">
+                    <span>📋</span> SKEMA MODEL JSON STANDAR (23 FIELD BAKU):
+                </p>
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleModelJson()" class="text-[11px] bg-indigo-950 text-indigo-300 border border-indigo-700 hover:bg-indigo-900 px-3 py-1 rounded-lg font-mono font-semibold transition-all">
+                        👁️ <span id="toggleModelBtnText">Sembunyikan Model</span>
+                    </button>
+                    <button onclick="salinModelJson()" class="text-[11px] bg-emerald-950 text-emerald-300 border border-emerald-700 hover:bg-emerald-900 px-3 py-1 rounded-lg font-mono font-semibold transition-all">
+                        📋 Salin Model JSON
+                    </button>
+                </div>
+            </div>
+
+            <div id="modelJsonContainer" class="space-y-1">
+                <p class="text-[11px] text-slate-400">Semua berkas (XLSX, CSV, PDF, Gambar) yang diekstrak akan otomatis dipetakan persis ke 23 atribut berikut:</p>
+                <textarea id="modelJsonText" readonly class="w-full h-56 bg-[#090d16] border border-[#1e293b] rounded-xl p-3 font-mono text-xs text-emerald-400 focus:outline-none resize-none scrollbar-thin leading-relaxed"></textarea>
+            </div>
+        </div>
+
         <!-- Status Data Tersimpan -->
         <div class="bg-[#1e293b] border border-[#334155] rounded-2xl p-4 shadow-lg">
             <div class="flex items-center justify-between">
@@ -292,6 +314,35 @@
         let dataGabungan = [];
         let fileTerpilih = [];
 
+        // Sample Model JSON Standar 23 Field (Format Huruf Kapital)
+        const SAMPLE_JSON_MODEL = [
+          {
+            "plat_nomor": "BK 1899 VM",
+            "nama_pemilik": "TAMBENG PRANATA",
+            "no_ktp": "1209091610730001",
+            "email": "TAMBENG@GMAIL.COM",
+            "no_hp": "081234567890",
+            "pekerjaan": "WIRASWASTA",
+            "alamat": "LK XV BINJAI SERBANGAN KEL. BINJAI SERBANGAN, KEC. AIR JOMAN ASAHAN",
+            "merk": "TOYOTA",
+            "tipe": "CALYA 1.2 G M/T",
+            "tahun": "2020",
+            "isi_silinder": "1197",
+            "warna_kendaraan": "PUTIH",
+            "warna_tnkb": "HITAM",
+            "bbm": "BENSIN",
+            "no_rangka": "MHKA6GJ6JLJ606952",
+            "no_mesin": "3NRH514421",
+            "no_bpkb": "Q00349316",
+            "no_stnk": "STNK123456",
+            "no_faktur": "0",
+            "tanggal_faktur": "2020-05-10",
+            "tanggal_stnk": "2020-06-01",
+            "tanggal_daftar": "2020-06-12",
+            "apm": "TOYOTA ASTRA MOTOR"
+          }
+        ];
+
         // Firebase Instances
         let fbApp = null;
         let fbAuth = null;
@@ -305,7 +356,42 @@
         window.addEventListener('DOMContentLoaded', () => {
             setupDropzone();
             loadSavedConfigs();
+            tampilkanModelJsonDefault();
         });
+
+        function tampilkanModelJsonDefault() {
+            const el = document.getElementById('modelJsonText');
+            if (el) {
+                el.value = JSON.stringify(SAMPLE_JSON_MODEL, null, 2);
+            }
+        }
+
+        function toggleModelJson() {
+            const container = document.getElementById('modelJsonContainer');
+            const btnText = document.getElementById('toggleModelBtnText');
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                btnText.innerText = "Sembunyikan Model";
+            } else {
+                container.classList.add('hidden');
+                btnText.innerText = "Tampilkan Model";
+            }
+        }
+
+        function salinModelJson() {
+            try {
+                const text = document.getElementById('modelJsonText').value;
+                const tempInput = document.createElement('textarea');
+                tempInput.value = text;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                showToast("Model JSON 23 Field berhasil disalin!", "success");
+            } catch (e) {
+                showToast("Gagal menyalin model JSON", "warn");
+            }
+        }
 
         function loadSavedConfigs() {
             // Load Saved GitHub URL
@@ -642,9 +728,10 @@
         function normalisasiAmbil(obj, ...kunci) {
             const keys = Object.keys(obj);
             
-            // 1. Exact Clean Match
+            // 1. Exact Match (Cleaned alphanumeric)
             for (const k of kunci) {
                 const cari = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (!cari) continue;
                 const exactKey = keys.find(col => col.toLowerCase().replace(/[^a-z0-9]/g, '') === cari);
                 if (exactKey !== undefined && obj[exactKey] !== null && obj[exactKey] !== undefined) {
                     const val = String(obj[exactKey]).trim();
@@ -652,11 +739,15 @@
                 }
             }
 
-            // 2. Contains Match
+            // 2. Strict Word Boundary / Substring Match (Only for keywords >= 3 chars, avoids 'hp', 'no' false positives)
             for (const k of kunci) {
                 const cari = k.toLowerCase().replace(/[^a-z0-9]/g, '');
-                if (!cari) continue;
-                const partialKey = keys.find(col => col.toLowerCase().replace(/[^a-z0-9]/g, '').includes(cari));
+                if (!cari || cari.length < 3) continue;
+                
+                const partialKey = keys.find(col => {
+                    const cleanCol = col.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    return cleanCol.includes(cari);
+                });
                 if (partialKey !== undefined && obj[partialKey] !== null && obj[partialKey] !== undefined) {
                     const val = String(obj[partialKey]).trim();
                     if (val !== "" && val !== "null" && val !== "undefined") return val;
@@ -666,34 +757,77 @@
             return "";
         }
 
-        // FORMATTER STRIKS: MENGENALKAN TEPAT 23 FIELD STANDAR
+        // FORMATTER STRIKS: MENGENALKAN TEPAT 23 FIELD STANDAR + AUTO-UPPERCASE
         function normalisasiData(row) {
             const getVal = (...kunci) => normalisasiAmbil(row, ...kunci);
 
+            let plat_nomor = getVal("plat_nomor", "nopol", "platnomor", "plat nomor", "nomor polisi", "no pol", "no_pol", "plat", "license_plate", "no_polisi", "no_plat", "nopolisi");
+            let nama_pemilik = getVal("nama_pemilik", "namapemilik", "pemilik", "nama pemilik", "nama", "owner", "nama_nasabah", "nama_debitur", "cust_name", "customer_name", "debitur", "nasabah", "nama_customer", "client_name", "borrower", "nama debitur");
+            let no_ktp = getVal("no_ktp", "noktp", "ktp", "nik", "no ktp", "idcard", "id_card", "no_identitas", "id_number", "no_nik", "ktp_no");
+            let email = getVal("email", "e-mail", "mail", "alamat_email");
+            let no_hp = getVal("no_hp", "nohp", "mssdn", "msisdn", "no_telepon", "handphone", "no_handphone", "telepon", "no_telp", "phone", "mobile", "no_wa", "contact_no", "no_hp1", "telepon_1", "telp", "hp", "wa");
+            let pekerjaan = getVal("pekerjaan", "job", "occupation", "profesi", "work");
+            let alamat = getVal("alamat", "address", "domisili", "alamat_debitur", "alamat_tinggal", "cust_address", "alamat_nasabah", "alamat debitur");
+            let merk = getVal("merk", "merek", "brand", "make", "object_brand", "merk_kendaraan", "vehicle_brand", "merek_kendaraan");
+            let tipe = getVal("tipe", "type", "model", "object_type", "tipe_kendaraan", "vehicle_type", "merek_tipe", "description", "object_desc", "deskripsi", "tipe_unit", "unit_type");
+            let tahun = getVal("tahun", "thn", "year", "tahun_pembuatan", "mfg_year", "tahun_kendaraan", "thn_buat");
+            let isi_silinder = getVal("isi_silinder", "isisilinder", "cc", "silinder", "kapasitas", "engine_cc");
+            let warna_kendaraan = getVal("warna_kendaraan", "warnakendaraan", "warna kendaraan", "warna", "color", "colour", "warna_objek");
+            let warna_tnkb = getVal("warna_tnkb", "warnatnkb", "warna tnkb", "tnkb_color");
+            let bbm = getVal("bbm", "bahanbakar", "bahan bakar", "fuel", "bahan_bakar");
+            let no_rangka = getVal("no_rangka", "norangka", "rangka", "noka", "no rangka", "chassis", "chassis_no", "frame_no", "no_chassis", "chassisno", "vin");
+            let no_mesin = getVal("no_mesin", "nomesin", "mesin", "nosin", "no mesin", "engine", "engine_no", "no_engine", "engineno");
+            let no_bpkb = getVal("no_bpkb", "nobpkb", "bpkb", "no bpkb", "bpkb_no");
+            let no_stnk = getVal("no_stnk", "nostnk", "stnk", "no stnk", "stnk_no");
+            let no_faktur = getVal("no_faktur", "nofaktur", "faktur", "no faktur", "invoice_no");
+            let tanggal_faktur = getVal("tanggal_faktur", "tanggalfaktur", "tanggal faktur", "tgl faktur", "invoice_date");
+            let tanggal_stnk = getVal("tanggal_stnk", "tanggalstnk", "tanggal stnk", "tgl stnk", "stnk_date");
+            let tanggal_daftar = getVal("tanggal_daftar", "tanggaldaftar", "tanggal daftar", "daftar", "tgl daftar", "reg_date", "tgl_go_live", "go_live_date", "tanggal_kontrak", "tgl_kontrak");
+            let apm = getVal("apm", "agen pemegang merk", "apm_name");
+
+            // 🛠️ SMART AUTO-CORRECT SANITIZATION
+            const isHpOnlyNumbers = /^[0-9+()\s-]{7,16}$/.test(no_hp);
+            const isTipePhone = /^[0-9+()\s-]{7,16}$/.test(tipe);
+
+            // Jika nilai 'tipe' ternyata berisi format nomor HP (misal "08123456789") -> Pindahkan ke no_hp
+            if (isTipePhone && !no_hp) {
+                no_hp = tipe;
+                tipe = "";
+            }
+
+            // Jika nilai 'no_hp' bukan nomor HP (misal "CALYA 1.2 G") -> Pindahkan ke tipe
+            if (no_hp && !isHpOnlyNumbers && !tipe) {
+                tipe = no_hp;
+                no_hp = "";
+            }
+
+            // OTOMATIS UBAH SEMUA NILAI MENJADI HURUF KAPITAL (UPPERCASE)
+            const toUpper = (val) => val ? String(val).trim().toUpperCase() : "";
+
             return {
-                "plat_nomor": getVal("plat_nomor", "nopol", "platnomor", "plat nomor", "nomor polisi", "no pol", "no_pol", "plat", "license_plate", "no_polisi", "no_plat", "nopolisi"),
-                "nama_pemilik": getVal("nama_pemilik", "namapemilik", "pemilik", "nama pemilik", "nama", "owner", "nama_nasabah", "nama_debitur", "cust_name", "customer_name", "debitur", "nasabah", "nama_customer", "client_name", "borrower", "nama debitur"),
-                "no_ktp": getVal("no_ktp", "noktp", "ktp", "nik", "no. ktp", "no ktp", "idcard", "id_card", "no_identitas", "id_number", "no_nik", "ktp_no"),
-                "email": getVal("email", "e-mail", "mail", "alamat_email"),
-                "no_hp": getVal("no_hp", "nohp", "hp", "telepon", "no telp", "phone", "wa", "no_telepon", "mobile", "handphone", "no_handphone", "no_hp1", "telepon_1", "telp"),
-                "pekerjaan": getVal("pekerjaan", "job", "occupation", "profesi", "work"),
-                "alamat": getVal("alamat", "address", "domisili", "alamat_debitur", "alamat_tinggal", "cust_address", "alamat_nasabah", "alamat debitur"),
-                "merk": getVal("merk", "merek", "brand", "make", "object_brand", "merk_kendaraan", "vehicle_brand", "merek_kendaraan"),
-                "tipe": getVal("tipe", "type", "model", "object_type", "tipe_kendaraan", "vehicle_type", "merek_tipe", "description", "object_desc"),
-                "tahun": getVal("tahun", "thn", "year", "tahun_pembuatan", "mfg_year", "tahun_kendaraan", "thn_buat"),
-                "isi_silinder": getVal("isi_silinder", "isisilinder", "cc", "silinder", "kapasitas", "engine_cc"),
-                "warna_kendaraan": getVal("warna_kendaraan", "warnakendaraan", "warna kendaraan", "warna", "color", "colour", "warna_objek"),
-                "warna_tnkb": getVal("warna_tnkb", "warnatnkb", "warna tnkb", "tnkb_color"),
-                "bbm": getVal("bbm", "bahanbakar", "bahan bakar", "fuel", "bahan_bakar"),
-                "no_rangka": getVal("no_rangka", "norangka", "rangka", "noka", "no rangka", "chassis", "chassis_no", "frame_no", "no_chassis", "chassisno", "vin"),
-                "no_mesin": getVal("no_mesin", "nomesin", "mesin", "nosin", "no mesin", "engine", "engine_no", "no_engine", "engineno"),
-                "no_bpkb": getVal("no_bpkb", "nobpkb", "bpkb", "no bpkb", "bpkb_no"),
-                "no_stnk": getVal("no_stnk", "nostnk", "stnk", "no stnk", "stnk_no"),
-                "no_faktur": getVal("no_faktur", "nofaktur", "faktur", "no faktur", "invoice_no"),
-                "tanggal_faktur": getVal("tanggal_faktur", "tanggalfaktur", "tanggal faktur", "tgl faktur", "invoice_date"),
-                "tanggal_stnk": getVal("tanggal_stnk", "tanggalstnk", "tanggal stnk", "tgl stnk", "stnk_date"),
-                "tanggal_daftar": getVal("tanggal_daftar", "tanggaldaftar", "tanggal daftar", "daftar", "tgl daftar", "reg_date", "tgl_go_live", "go_live_date", "tanggal_kontrak", "tgl_kontrak"),
-                "apm": getVal("apm", "agen pemegang merk", "apm_name")
+                "plat_nomor": toUpper(plat_nomor),
+                "nama_pemilik": toUpper(nama_pemilik),
+                "no_ktp": toUpper(no_ktp),
+                "email": toUpper(email),
+                "no_hp": toUpper(no_hp),
+                "pekerjaan": toUpper(pekerjaan),
+                "alamat": toUpper(alamat),
+                "merk": toUpper(merk),
+                "tipe": toUpper(tipe),
+                "tahun": toUpper(tahun),
+                "isi_silinder": toUpper(isi_silinder),
+                "warna_kendaraan": toUpper(warna_kendaraan),
+                "warna_tnkb": toUpper(warna_tnkb),
+                "bbm": toUpper(bbm),
+                "no_rangka": toUpper(no_rangka),
+                "no_mesin": toUpper(no_mesin),
+                "no_bpkb": toUpper(no_bpkb),
+                "no_stnk": toUpper(no_stnk),
+                "no_faktur": toUpper(no_faktur),
+                "tanggal_faktur": toUpper(tanggal_faktur),
+                "tanggal_stnk": toUpper(tanggal_stnk),
+                "tanggal_daftar": toUpper(tanggal_daftar),
+                "apm": toUpper(apm)
             };
         }
 
@@ -752,11 +886,24 @@
                 
                 if (!rows || rows.length === 0) continue;
 
+                // Detect header row by scanning for rows containing known header keywords
                 let headerRowIdx = 0;
-                let maxCols = 0;
-                for (let r = 0; r < Math.min(15, rows.length); r++) {
-                    if (rows[r] && rows[r].filter(c => c !== undefined && c !== '').length > maxCols) {
-                        maxCols = rows[r].filter(c => c !== undefined && c !== '').length;
+                let maxHeaderMatches = -1;
+
+                const headerKeywords = ['nopol', 'plat', 'pemilik', 'debitur', 'nama', 'merk', 'tipe', 'type', 'chassis', 'rangka', 'mesin', 'engine', 'ktp', 'nik', 'hp', 'telepon', 'phone', 'alamat', 'bpkb', 'stnk', 'agreement', 'kontrak'];
+
+                for (let r = 0; r < Math.min(20, rows.length); r++) {
+                    if (!rows[r]) continue;
+                    let matches = 0;
+                    for (const cell of rows[r]) {
+                        if (!cell) continue;
+                        const cellStr = String(cell).toLowerCase().replace(/[^a-z0-9]/g, '');
+                        if (headerKeywords.some(kw => cellStr.includes(kw))) {
+                            matches++;
+                        }
+                    }
+                    if (matches > maxHeaderMatches) {
+                        maxHeaderMatches = matches;
                         headerRowIdx = r;
                     }
                 }
