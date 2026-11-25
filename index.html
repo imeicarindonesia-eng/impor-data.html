@@ -561,6 +561,16 @@
         let editingDataIndex = -1;
         let pendingDeletePayload = null;
 
+        // Daftar Merek Pabrikan Kendaraan (Untuk auto-deteksi & auto-koreksi kolom MEREK/TYPE)
+        const BRAND_KENDARAAN_SET = new Set([
+            'TOYOTA', 'HONDA', 'SUZUKI', 'MITSUBISHI', 'DAIHATSU', 'NISSAN', 'MAZDA',
+            'KIA', 'HYUNDAI', 'WULING', 'ISUZU', 'HINO', 'MERCEDES', 'MERCEDESBENZ',
+            'BMW', 'LEXUS', 'FORD', 'CHEVROLET', 'DATSUN', 'YAMAHA', 'KAWASAKI',
+            'VESPA', 'PIAGGIO', 'SUBARU', 'VOLKSWAGEN', 'VW', 'AUDI', 'PEUGEOT',
+            'RENAULT', 'CHERY', 'DFSK', 'MG', 'BYD', 'NETA', 'OMODA', 'JEEP', 'MINI',
+            'VOLVO', 'TATA', 'FUSO', 'UDTRUCKS', 'SCANIA', 'MAN'
+        ]);
+
         // =========================================================================
         // 💾 ENGINE PENYIMPANAN PERMANEN OFFLINE (INDEXEDDB) — ANTI-HILANG SAAT KELUAR/MASUK
         // =========================================================================
@@ -616,13 +626,11 @@
             return `ROW_${Date.now()}_${fallbackIdx}_${Math.random().toString(36).slice(2, 6)}`;
         }
 
-        // Simpan seluruh array dataGabungan ke IndexedDB secara bertahap (aman untuk ratusan ribu data)
         async function simpanSemuaKePenyimpananLokal(records, onProgress = null) {
             try {
                 const db = await bukaIndexedDB();
                 const total = records.length;
 
-                // Kosongkan store lama terlebih dahulu agar sinkron 100% dengan state terbaru
                 await new Promise((resolve, reject) => {
                     const txClear = db.transaction(IDB_STORE, 'readwrite');
                     txClear.objectStore(IDB_STORE).clear();
@@ -669,7 +677,6 @@
             }
         }
 
-        // Update 1 baris data yang baru diedit ke IndexedDB (instan < 5ms)
         async function simpanSatuKePenyimpananLokal(item, oldUid = null) {
             try {
                 const db = await bukaIndexedDB();
@@ -698,7 +705,6 @@
             }
         }
 
-        // Hapus daftar UID tertentu dari IndexedDB
         async function hapusDariPenyimpananLokal(uidsToDelete) {
             if (!uidsToDelete || uidsToDelete.length === 0) return;
             try {
@@ -719,7 +725,6 @@
             }
         }
 
-        // Muat otomatis seluruh data & riwayat file yang tersimpan ketika aplikasi dibuka kembali
         async function muatDariPenyimpananLokal() {
             try {
                 const db = await bukaIndexedDB();
@@ -808,7 +813,6 @@
             return obj;
         }
 
-        // Document ID Firebase rapat huruf besar tanpa spasi/underscore agar 100% cocok dengan DATA NOPOL
         function buatDocIdFirebase(item) {
             if (!item) return null;
             if (item._fbDocId) return item._fbDocId;
@@ -1077,7 +1081,6 @@
                     await new Promise(r => setTimeout(r, 50));
                 }
 
-                // Simpan status _syncedFirebase ke penyimpanan lokal aplikasi
                 await simpanSemuaKePenyimpananLokal(dataGabungan);
                 hideProgress();
                 renderTabelManager();
@@ -1272,12 +1275,30 @@
             return "";
         }
 
-        // FORMATTER STRIKS: 23 FIELD STANDAR + KUNCI 'nopol' TANPA SPASI (100% SINKRON DATA NOPOL)
+        // FORMATTER STRIKS: 23 FIELD STANDAR + KUNCI 'nopol' TANPA SPASI + AUTO-KOREKSI MEREK/TYPE
+        function bersihkanNoHp(rawHp) {
+            if (!rawHp) return "";
+            const str = String(rawHp).trim().toUpperCase();
+            const parts = str.split(/\s*(?:\/\/+|\/|\||;|,)\s*/).map(s => s.trim()).filter(Boolean);
+            if (parts.length <= 1) {
+                return str.replace(/^\/+|\/+$/g, '').trim();
+            }
+            const unik = [];
+            for (const p of parts) {
+                const cleanNum = p.replace(/[^0-9+]/g, '');
+                if (!cleanNum) continue;
+                if (!unik.some(u => u.replace(/[^0-9+]/g, '') === cleanNum)) {
+                    unik.push(p);
+                }
+            }
+            return unik.length > 0 ? unik.join(' / ') : str.replace(/^\/+|\/+$/g, '').trim();
+        }
+
         function normalisasiData(row) {
             const getVal = (...kunci) => normalisasiAmbil(row, ...kunci);
 
             let plat_nomor = getVal("plat_nomor", "nopol", "platnomor", "plat nomor", "nomor polisi", "no pol", "no_pol", "plat", "license_plate", "no_polisi", "no_plat", "nopolisi");
-            let nama_pemilik = getVal("nama_pemilik", "namapemilik", "pemilik", "nama pemilik", "nama", "owner", "nama_nasabah", "nama_debitur", "cust_name", "customer_name", "debitur", "nasabah", "nama_customer", "client_name", "borrower", "nama debitur");
+            let nama_pemilik = getVal("nama_pemilik", "namapemilik", "pemilik", "nama pemilik", "nama", "name", "owner", "nama_nasabah", "nama_debitur", "cust_name", "customer_name", "debitur", "nasabah", "nama_customer", "client_name", "borrower", "nama debitur");
             let no_ktp = getVal("no_ktp", "noktp", "ktp", "nik", "no ktp", "idcard", "id_card", "no_identitas", "id_number", "no_nik", "ktp_no");
             let email = getVal("email", "e-mail", "mail", "alamat_email");
             let no_hp = getVal("no_hp", "nohp", "mssdn", "msisdn", "no_telepon", "handphone", "no_handphone", "telepon", "no_telp", "phone", "mobile", "no_wa", "contact_no", "no_hp1", "telepon_1", "telp", "hp", "wa");
@@ -1300,18 +1321,30 @@
             let tanggal_daftar = getVal("tanggal_daftar", "tanggaldaftar", "tanggal daftar", "daftar", "tgl daftar", "reg_date", "tgl_go_live", "go_live_date", "tanggal_kontrak", "tgl_kontrak");
             let apm = getVal("apm", "agen pemegang merk", "apm_name");
 
+            no_hp = bersihkanNoHp(no_hp);
+
             // SMART AUTO-CORRECT SANITIZATION
-            const isHpOnlyNumbers = /^[0-9+()\s-]{7,16}$/.test(no_hp);
-            const isTipePhone = /^[0-9+()\s-]{7,16}$/.test(tipe);
+            const isHpOnlyNumbers = /^[0-9+()\s/-]{7,35}$/.test(no_hp);
+            const isTipePhone = /^[0-9+()\s/-]{7,35}$/.test(tipe);
 
             if (isTipePhone && !no_hp) {
-                no_hp = tipe;
+                no_hp = bersihkanNoHp(tipe);
                 tipe = "";
             }
 
             if (no_hp && !isHpOnlyNumbers && !tipe) {
                 tipe = no_hp;
                 no_hp = "";
+            }
+
+            // AUTO-KOREKSI JIKA KOLOM MEREK & TYPE TERTUKAR DI FILE EXCEL (misal MEREK berisi "FORTUNER...", TYPE berisi "TOYOTA")
+            const cleanBrandCheck = (val) => String(val || '').replace(/[^a-zA-Z]/g, '').toUpperCase();
+            const isMerkBrand = BRAND_KENDARAAN_SET.has(cleanBrandCheck(merk));
+            const isTipeBrand = BRAND_KENDARAAN_SET.has(cleanBrandCheck(tipe));
+            if (isTipeBrand && !isMerkBrand && merk) {
+                const tempMerk = merk;
+                merk = tipe;
+                tipe = tempMerk;
             }
 
             const toUpper = (val) => val ? String(val).trim().toUpperCase() : "";
@@ -1374,44 +1407,214 @@
             return normalisasiData(obj);
         }
 
-        // PARSER 1: EXCEL / CSV (Dengan Pembersihan Memori Tiap Sheet)
+        // =========================================================================
+        // 🧠 PEMETAAN HEADER + DETEKSI PINTAR ISI KOLOM EXCEL (ANTI TERTUKAR NAMA PEMILIK)
+        // =========================================================================
+        const HEADER_DIABAIKAN_RE = /^(no|nomor|urut|sumber\s*pendanaan|pendanaan|leasing|finance|multifinance|funder|cabang|branch|area|wilayah|region|collector|matel|pic|surveyor|status|keterangan|ket|catatan|remark|remarks|note|notes|overdue|ovd|dpd|angsuran|tenor|otr|pokok|hutang|saldo|os|outstanding)$/i;
+        const CORPORATE_LEASING_RE = /\b(PT\.?|CV\.?|TBK|FINANCE|LEASING|MULTIFINANCE|BANK|ADIRA|FIF|BCA|MANDIRI|BAF|WOM|OTO|ACC|CLIPAN|CIMB|BRI|BNI|BSI|MEGA|MANDALA|BFI|NSC|INDO\s*MOBIL|SUMMIT|VERENA|BUANA|SINARMAS|MAYBANK|DANAMON|PERMATA|PANIN)\b/i;
+
+        function petakanHeaderKeField(headerText) {
+            const raw = String(headerText || '').trim();
+            if (!raw) return null;
+            if (HEADER_DIABAIKAN_RE.test(raw)) return '__IGNORE__';
+
+            const clean = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (!clean) return null;
+
+            const exactMap = {
+                platnomor: 'plat_nomor', nopol: 'plat_nomor', nomorpolisi: 'plat_nomor', nopolisi: 'plat_nomor',
+                noplat: 'plat_nomor', plat: 'plat_nomor', licenseplate: 'plat_nomor',
+                namapemilik: 'nama_pemilik', pemilik: 'nama_pemilik', nama: 'nama_pemilik', name: 'nama_pemilik',
+                owner: 'nama_pemilik', namanasabah: 'nama_pemilik', namadebitur: 'nama_pemilik',
+                custname: 'nama_pemilik', customername: 'nama_pemilik', debitur: 'nama_pemilik',
+                nasabah: 'nama_pemilik', namacustomer: 'nama_pemilik', clientname: 'nama_pemilik', borrower: 'nama_pemilik',
+                namastnk: 'nama_pemilik', namabpkb: 'nama_pemilik',
+                noktp: 'no_ktp', ktp: 'no_ktp', nik: 'no_ktp', nikktp: 'no_ktp', nonik: 'no_ktp', noidentitas: 'no_ktp', idnumber: 'no_ktp',
+                email: 'email', alamatemail: 'email',
+                nohp: 'no_hp', hp: 'no_hp', mssdn: 'no_hp', msisdn: 'no_hp', notelepon: 'no_hp',
+                handphone: 'no_hp', nohandphone: 'no_hp', telepon: 'no_hp', notelp: 'no_hp',
+                phone: 'no_hp', mobile: 'no_hp', nowa: 'no_hp', wa: 'no_hp', whatsapp: 'no_hp', telp: 'no_hp', nokontak: 'no_hp',
+                pekerjaan: 'pekerjaan', job: 'pekerjaan', occupation: 'pekerjaan', profesi: 'pekerjaan', bidangpekerjaan: 'pekerjaan',
+                alamat: 'alamat', address: 'alamat', domisili: 'alamat', alamatdebitur: 'alamat', alamatnasabah: 'alamat',
+                alamatktp: 'alamat', alamatlengkap: 'alamat', alamatpemilik: 'alamat',
+                merk: 'merk', merek: 'merk', brand: 'merk', make: 'merk', merkkendaraan: 'merk', merekkendaraan: 'merk',
+                tipe: 'tipe', type: 'tipe', model: 'tipe', tipekendaraan: 'tipe', typekendaraan: 'tipe', vehicletype: 'tipe', deskripsi: 'tipe',
+                tahun: 'tahun', thn: 'tahun', year: 'tahun', tahunpembuatan: 'tahun', tahunkendaraan: 'tahun', tahunbuat: 'tahun', tahunrakit: 'tahun',
+                isisilinder: 'isi_silinder', isicylinder: 'isi_silinder', cylinder: 'isi_silinder', cc: 'isi_silinder', silinder: 'isi_silinder', kapasitas: 'isi_silinder',
+                warnakendaraan: 'warna_kendaraan', warna: 'warna_kendaraan', color: 'warna_kendaraan', warnaunit: 'warna_kendaraan',
+                warnatnkb: 'warna_tnkb', warnaplat: 'warna_tnkb',
+                bbm: 'bbm', namabbm: 'bbm', jenisbbm: 'bbm', bahanbakar: 'bbm', fuel: 'bbm',
+                norangka: 'no_rangka', rangka: 'no_rangka', noka: 'no_rangka', nomorrangka: 'no_rangka', chassis: 'no_rangka', nochassis: 'no_rangka', vin: 'no_rangka',
+                nomesin: 'no_mesin', mesin: 'no_mesin', nosin: 'no_mesin', nomormesin: 'no_mesin', engine: 'no_mesin', noengine: 'no_mesin',
+                nobpkb: 'no_bpkb', bpkb: 'no_bpkb', nomorbpkb: 'no_bpkb',
+                nostnk: 'no_stnk', stnk: 'no_stnk', nomorstnk: 'no_stnk',
+                nofaktur: 'no_faktur', faktur: 'no_faktur', nomorfaktur: 'no_faktur',
+                tanggalfaktur: 'tanggal_faktur', tglfaktur: 'tanggal_faktur',
+                tanggalstnk: 'tanggal_stnk', tglstnk: 'tanggal_stnk', masaberlakustnk: 'tanggal_stnk',
+                tanggaldaftar: 'tanggal_daftar', tgldaftar: 'tanggal_daftar', tglpendaftaran: 'tanggal_daftar', tanggalpendaftaran: 'tanggal_daftar',
+                tglregistrasi: 'tanggal_daftar', tglgolive: 'tanggal_daftar', tglkontrak: 'tanggal_daftar', tanggalkontrak: 'tanggal_daftar',
+                apm: 'apm', atpm: 'apm'
+            };
+
+            return exactMap[clean] || null;
+        }
+
+        const WARNA_KEYWORDS_RE = /\b(HITAM|PUTIH|SILVER|ABU|MERAH|BIRU|KUNING|COKLAT|HIJAU|ORANYE|ORANGE|UNGU|GOLD|GREY|GRAY|BLACK|WHITE|METALIK|METALLIC|MUTIARA|MIKA|BRONZE|MAROON|CREAM)\b/i;
+        const TIPE_MODEL_RE = /\b(AVANZA|XENIA|BRIO|JAZZ|CIVIC|FORTUNER|INNOVA|PAJERO|OUTLANDER|CALYA|SIGRA|AGYA|AYLA|ERTIGA|XPANDER|RUSH|TERIOS|HRV|HR-V|CRV|CR-V|BRV|BR-V|YARIS|ALPHARD|VELLFIRE|BEAT|VARIO|SCOOPY|NMAX|PCX|AEROX|LEXI|MIO|VIXION|KLX|CRF|SATRIA|SONIC|REVO|SUPRA|CVT|M\/T|A\/T|MT|AT|CKD|GLX|EXCEED|SATYA|SPORT|LUX|VELOZ|RAIZE|ROCKY|IGNIS|BALENO|SWIFT|KARIMUN|APV|GRAND\s*MAX|LUXIO|LIVINA|EVALIA|MARCH|JUKE|X-TRAIL|SERENA|MAZDA2|CX-5|CX-3|MIRAGE|STRADA|TRITON|L300|CANTER|HILUX|HIACE|KIJANG|CAMRY|COROLLA|VIOS|SIENTA|MOBILIO|FREED|CITY|ACCORD|ODYSSEY)\b/i;
+        const ALAMAT_KEYWORDS_RE = /\b(JL\.?|JALAN|DESA|KEL\.?|KELURAHAN|KEC\.?|KECAMATAN|RT\.?|RW\.?|DSN\.?|DUSUN|GG\.?|GANG|KOMP\.?|KOMPLEK|BLOK|KAB\.?|KABUPATEN|KOTA|PROV\.?|PROVINSI|NO\.\s*\d+)\b/i;
+
+        function deteksiPeranKolomDariIsi(rows, startRow, maxCols, lockedColMap = {}, preUsedRoles = new Set()) {
+            const sampleLimit = Math.min(rows.length, startRow + 60);
+            const colScores = Array.from({ length: maxCols }, () => ({
+                plat_nomor: 0,
+                no_rangka: 0,
+                no_mesin: 0,
+                tahun: 0,
+                merk: 0,
+                warna_kendaraan: 0,
+                no_ktp: 0,
+                no_hp: 0,
+                tipe: 0,
+                alamat: 0,
+                nama_pemilik: 0,
+                nonEmpty: 0
+            }));
+
+            for (let r = startRow; r < sampleLimit; r++) {
+                const row = rows[r];
+                if (!row) continue;
+                for (let c = 0; c < maxCols; c++) {
+                    if (lockedColMap[c]) continue;
+                    const raw = row[c] !== undefined && row[c] !== null ? String(row[c]).trim() : '';
+                    if (!raw || raw === '-' || raw === '0') continue;
+
+                    const sc = colScores[c];
+                    sc.nonEmpty++;
+                    const up = raw.toUpperCase();
+                    const compact = up.replace(/\s+/g, '');
+
+                    // 1. Plat Nomor Indonesia (misal BK 1567 AFL, BL1503AAM, B 1867 KBK)
+                    if (/^[A-Z]{1,2}\s*\d{1,4}\s*[A-Z]{1,3}$/.test(up) && compact.length >= 4 && compact.length <= 10) {
+                        sc.plat_nomor += 5;
+                    }
+                    // 2. Tahun (1990 - 2030)
+                    else if (/^(199\d|20[0-3]\d)$/.test(compact)) {
+                        sc.tahun += 5;
+                    }
+                    // 3. NIK / No KTP (16 digit)
+                    else if (/^\d{16}$/.test(compact)) {
+                        sc.no_ktp += 5;
+                    }
+                    // 4. No HP (08... atau 628...)
+                    else if (/^(\+?62|0)8\d{7,12}$/.test(compact.replace(/[-()]/g, ''))) {
+                        sc.no_hp += 5;
+                    }
+                    // 5. Merek Pabrikan (TOYOTA, HONDA, SUZUKI, dll.)
+                    else if (BRAND_KENDARAAN_SET.has(up.replace(/[^A-Z]/g, ''))) {
+                        sc.merk += 5;
+                    }
+                    // 6. No Rangka / VIN (17 karakter alfanumerik)
+                    else if (/^[A-HJ-NPR-Z0-9]{17}$/.test(compact) && /[A-Z]/.test(compact) && /\d/.test(compact)) {
+                        sc.no_rangka += 6;
+                    }
+                    // 7. No Mesin (7-15 karakter alfanumerik rapat kombinasi huruf + angka)
+                    else if (/^[A-Z0-9-]{7,15}$/.test(up) && /[A-Z]/.test(up) && /\d/.test(up)) {
+                        sc.no_mesin += 4;
+                    }
+                    // 8. Warna Kendaraan
+                    else if (WARNA_KEYWORDS_RE.test(up) && up.length <= 35) {
+                        sc.warna_kendaraan += 4;
+                    }
+                    // 9. Tipe / Model Kendaraan
+                    else if (TIPE_MODEL_RE.test(up) || (/[A-Z]/.test(up) && /\d/.test(up) && up.includes(' '))) {
+                        sc.tipe += 4;
+                    }
+                    // 10. Alamat
+                    else if (ALAMAT_KEYWORDS_RE.test(up) || up.length > 45) {
+                        sc.alamat += 3;
+                    }
+                    // 11. Nama Pemilik (Kecualikan nama perusahaan leasing/finance)
+                    else if (/^[A-Z\s.,'`()/&-]{3,55}$/.test(up) && !/\d/.test(up)) {
+                        if (CORPORATE_LEASING_RE.test(up)) {
+                            sc.nama_pemilik -= 4;
+                        } else {
+                            sc.nama_pemilik += 3;
+                        }
+                    }
+                }
+            }
+
+            const assignedRoleByCol = { ...lockedColMap };
+            const usedRoles = new Set(preUsedRoles);
+            const priorityRoles = [
+                'plat_nomor', 'no_rangka', 'no_mesin', 'tahun', 'merk',
+                'warna_kendaraan', 'no_ktp', 'no_hp', 'tipe', 'alamat', 'nama_pemilik'
+            ];
+
+            for (const role of priorityRoles) {
+                if (usedRoles.has(role)) continue;
+                let bestCol = -1;
+                let bestScore = 0;
+                for (let c = 0; c < maxCols; c++) {
+                    if (assignedRoleByCol[c]) continue;
+                    const sc = colScores[c];
+                    if (sc.nonEmpty === 0) continue;
+                    const score = sc[role];
+                    if (score > bestScore && score >= Math.max(3, sc.nonEmpty * 1.2)) {
+                        bestScore = score;
+                        bestCol = c;
+                    }
+                }
+                if (bestCol !== -1) {
+                    assignedRoleByCol[bestCol] = role;
+                    usedRoles.add(role);
+                }
+            }
+
+            return assignedRoleByCol;
+        }
+
+        // PARSER 1: EXCEL / CSV (Mengunci header yang dikenali & mendeteksi sisa kolom secara akurat)
         async function bacaExcelAtauCsv(file) {
             log(`📖 Membaca file (${formatUkuran(file.size)}): ${file.name}...`, "info");
             
             const buf = await file.arrayBuffer();
-            const readOptions = {
+            const wb = XLSX.read(buf, {
                 type: 'array',
-                dense: true,
                 cellStyles: false,
                 cellFormulas: false,
                 cellHTML: false,
                 cellDates: false
-            };
-
-            const wb = XLSX.read(buf, readOptions);
+            });
             const hasil = [];
 
             for (const sheetName of wb.SheetNames) {
                 const ws = wb.Sheets[sheetName];
-                if (!ws || !ws['!ref']) continue;
+                if (!ws) continue;
 
-                const rows = XLSX.utils.sheet_to_json(ws, { defval: '', header: 1 });
+                const rows = XLSX.utils.sheet_to_json(ws, { defval: '', header: 1, blankrows: false });
                 wb.Sheets[sheetName] = null;
                 
                 if (!rows || rows.length === 0) continue;
 
+                let maxCols = 0;
+                for (let r = 0; r < Math.min(100, rows.length); r++) {
+                    if (rows[r] && rows[r].length > maxCols) {
+                        maxCols = rows[r].length;
+                    }
+                }
+
+                // Cari baris judul terbaik berdasarkan jumlah kolom kendaraan resmi yang dikenali
                 let headerRowIdx = 0;
-                let maxHeaderMatches = -1;
+                let maxHeaderMatches = 0;
 
-                const headerKeywords = ['nopol', 'plat', 'pemilik', 'debitur', 'nama', 'merk', 'tipe', 'type', 'chassis', 'rangka', 'mesin', 'engine', 'ktp', 'nik', 'hp', 'telepon', 'phone', 'alamat', 'bpkb', 'stnk', 'agreement', 'kontrak'];
-
-                for (let r = 0; r < Math.min(20, rows.length); r++) {
+                for (let r = 0; r < Math.min(15, rows.length); r++) {
                     if (!rows[r]) continue;
                     let matches = 0;
                     for (const cell of rows[r]) {
-                        if (!cell) continue;
-                        const cellStr = String(cell).toLowerCase().replace(/[^a-z0-9]/g, '');
-                        if (headerKeywords.some(kw => cellStr.includes(kw))) {
+                        if (cell === null || cell === undefined) continue;
+                        const mapped = petakanHeaderKeField(cell);
+                        if (mapped && mapped !== '__IGNORE__') {
                             matches++;
                         }
                     }
@@ -1421,25 +1624,51 @@
                     }
                 }
 
-                const headers = rows[headerRowIdx].map(h => String(h || '').trim());
+                const rawHeaders = Array.from({ length: maxCols }, (_, idx) =>
+                    String((rows[headerRowIdx] && rows[headerRowIdx][idx]) || '').trim()
+                );
+
+                // Kunci kolom yang judulnya sudah jelas dikenali (termasuk 'Name' -> 'nama_pemilik' & 'Sumber Pendanaan' -> '__IGNORE__')
+                const lockedColMap = {};
+                const preUsedRoles = new Set();
+
+                if (maxHeaderMatches >= 1) {
+                    for (let c = 0; c < maxCols; c++) {
+                        const mappedField = petakanHeaderKeField(rawHeaders[c]);
+                        if (mappedField === '__IGNORE__') {
+                            lockedColMap[c] = '__IGNORE__';
+                        } else if (mappedField && !preUsedRoles.has(mappedField)) {
+                            lockedColMap[c] = mappedField;
+                            preUsedRoles.add(mappedField);
+                        }
+                    }
+                }
+
+                const startDataRow = maxHeaderMatches >= 1 ? headerRowIdx + 1 : 0;
+                const finalColMap = deteksiPeranKolomDariIsi(rows, startDataRow, maxCols, lockedColMap, preUsedRoles);
+
+                const activeMappingDesc = Object.entries(finalColMap)
+                    .filter(([, role]) => role && role !== '__IGNORE__')
+                    .map(([colIdx, role]) => `Kolom ${Number(colIdx) + 1}→${role}`);
+                log(`📊 Pemetaan Kolom Sheet "${sheetName}": [${activeMappingDesc.join(', ')}]`, "info");
+
                 const totalBaris = rows.length;
 
-                log(`📊 Sheet "${sheetName}" (Header baris ke-${headerRowIdx + 1}) memiliki ${(totalBaris - headerRowIdx - 1).toLocaleString('id-ID')} baris data`, "info");
-
-                for (let i = headerRowIdx + 1; i < totalBaris; i++) {
+                for (let i = startDataRow; i < totalBaris; i++) {
                     const rowArray = rows[i];
                     if (!rowArray || rowArray.length === 0) continue;
 
                     const rowObj = {};
                     let hasAnyData = false;
-                    for (let j = 0; j < headers.length; j++) {
-                        const headerName = headers[j];
-                        if (headerName && rowArray[j] !== undefined && rowArray[j] !== null) {
-                            const valStr = String(rowArray[j]).trim();
-                            if (valStr !== '') {
-                                rowObj[headerName] = valStr;
-                                hasAnyData = true;
-                            }
+                    for (let j = 0; j < maxCols; j++) {
+                        if (rowArray[j] === undefined || rowArray[j] === null) continue;
+                        const valStr = String(rowArray[j]).trim();
+                        if (valStr === '') continue;
+
+                        const fieldKey = finalColMap[j];
+                        if (fieldKey && fieldKey !== '__IGNORE__') {
+                            rowObj[fieldKey] = valStr;
+                            hasAnyData = true;
                         }
                     }
 
@@ -1614,7 +1843,6 @@
             const jumlahSebelum = dataGabungan.length;
             const totalBaruCount = dataBaru.length;
 
-            // 1. Masukkan data yang sudah ada di aplikasi sebelumnya
             for (let i = 0; i < dataGabungan.length; i++) {
                 const oldItem = dataGabungan[i];
                 const k = kunciUnik(oldItem, `LAMA_${i}`);
@@ -1630,7 +1858,6 @@
                 if (i % 15000 === 0 && i > 0) await new Promise(r => setTimeout(r, 0));
             }
 
-            // 2. Masukkan data baru secara bertahap
             for (let i = 0; i < totalBaruCount; i++) {
                 const newItem = dataBaru[i];
                 const k = kunciUnik(newItem, `BARU_${Date.now()}_${i}`);
@@ -1658,7 +1885,6 @@
             mapData.clear();
             selectedIndices.clear();
 
-            // 3. Simpan permanen seluruh hasil gabungan ke IndexedDB agar tidak hilang saat keluar masuk aplikasi
             updateProgressStatus("Menyimpan permanen ke memori aplikasi...", 95);
             await simpanSemuaKePenyimpananLokal(dataGabungan, (pct, done, all) => {
                 updateProgressStatus(`Menyimpan permanen: ${done.toLocaleString('id-ID')} / ${all.toLocaleString('id-ID')} (${pct}%)`, pct);
@@ -1666,10 +1892,8 @@
 
             const pertambahanBersih = dataGabungan.length - jumlahSebelum;
 
-            // Reset panel download sebelumnya
             document.getElementById('downloadReadyBox').classList.add('hidden');
 
-            // Update UI Tampilan Hasil & Status Penyimpanan Permanen
             document.getElementById('statusDataLama').innerHTML =
                 `<span class="text-emerald-400 font-semibold">✅ Tersimpan Permanen di Aplikasi</span> -- <strong class="text-white">${dataGabungan.length.toLocaleString('id-ID')} kendaraan</strong> siap dicek & diedit kapan saja.`;
             document.getElementById('hasilSection').classList.remove('hidden');
@@ -1733,12 +1957,10 @@
         }
 
         function perbaruiTampilanHasilDanManager() {
-            // Update counters & preview JSON
             document.getElementById('jmlTotal').textContent = dataGabungan.length.toLocaleString('id-ID');
             document.getElementById('oldDataBadge').innerText = `${dataGabungan.length.toLocaleString('id-ID')} Data`;
             perbaruiPreviewDanEstimasi();
 
-            // Tampilkan panel hasil & manager jika ada data
             const savedFilesContainer = document.getElementById('savedFilesContainer');
             if (dataGabungan.length > 0) {
                 document.getElementById('hasilSection').classList.remove('hidden');
@@ -1748,7 +1970,6 @@
                 savedFilesContainer.classList.add('hidden');
             }
 
-            // Isi dropdown daftar sumber file unik & chips kartu file di bagian atas
             const sourceSelect = document.getElementById('filterSourceSelect');
             const prevVal = sourceSelect.value || 'ALL';
             const sourcesCount = new Map();
@@ -1985,12 +2206,10 @@
                 _importedAt: oldItem._importedAt || Date.now()
             });
 
-            // 1. Update di memori RAM & langsung simpan permanen ke IndexedDB aplikasi
             dataGabungan[editingDataIndex] = updatedObj;
             dataLama = [...dataGabungan];
             await simpanSatuKePenyimpananLokal(updatedObj, oldUid);
 
-            // 2. Jika Firebase terhubung, langsung update dokumen di koleksi 'pencarian' Firestore
             if (fbDb && fbUser && newDocId) {
                 try {
                     const { doc, setDoc, deleteDoc } = window.FB_SDK;
@@ -2128,7 +2347,6 @@
                 }
             });
 
-            // 1. Hapus permanen dari Firebase Cloud (koleksi 'pencarian') jika dicentang
             let deletedCloudCount = 0;
             if (alsoDeleteFirebase && fbDb && fbUser && docIdsToDelete.length > 0) {
                 try {
@@ -2164,7 +2382,6 @@
                 }
             }
 
-            // 2. Hapus dari memori RAM & penyimpanan permanen IndexedDB aplikasi
             dataGabungan = dataGabungan.filter((_, idx) => !deleteSet.has(idx));
             dataLama = [...dataGabungan];
             selectedIndices.clear();
@@ -2199,7 +2416,6 @@
             document.getElementById('estimasiUkuranText').innerText = `Estimasi Ukuran: ~${formatUkuran(estBytes)}`;
         }
 
-        // Helper serialisasi 1 potong slice sesuai format terpilih ('compact', 'pretty', atau 'offline_db')
         function serialisasiPotonganData(slice, formatMode, startIndex, usedKeysSet) {
             if (formatMode === 'offline_db') {
                 const entries = slice.map((item, idx) => {
@@ -2267,7 +2483,6 @@
             return finalBlob;
         }
 
-        // Menulis langsung ke disk (Harddisk/Storage) tanpa menumpuk di RAM
         async function streamLangsungKeDisk(fileHandle, dataArray, formatMode, onProgress) {
             const writable = await fileHandle.createWritable();
             const CHUNK_SIZE = 2500;
