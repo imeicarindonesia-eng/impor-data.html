@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google" content="notranslate">
-    <title>Data Kendaraan -- Impor, Ekstraksi & Sync Firebase</title>
+    <title>Data Kendaraan -- Impor, Penyimpanan Permanen & Sync Firebase (DATA NOPOL)</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -115,15 +115,15 @@
         <!-- Header -->
         <header class="bg-[#1e293b] border border-[#334155] rounded-2xl p-6 text-center shadow-xl">
             <div class="text-4xl mb-2">🚗</div>
-            <h1 class="text-xl sm:text-2xl font-extrabold text-white tracking-wide">Data Kendaraan -- Impor & Firebase Cloud Sync</h1>
-            <p class="text-xs sm:text-sm text-slate-400 mt-1">Impor Berkas XLSX, CSV, PDF & Foto JPG → Ekstrak JSON (Support Ratusan Ribu Data) → Sync Cloud</p>
+            <h1 class="text-xl sm:text-2xl font-extrabold text-white tracking-wide">Data Kendaraan -- Impor, Simpan Permanen & Sync</h1>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">Impor XLSX, CSV, PDF & JPG → Tersimpan Permanen di Aplikasi → Edit Kapan Saja & Sync <span class="text-emerald-400 font-mono font-bold">pencarian</span></p>
         </header>
 
         <!-- 🔥 PENGATURAN FIREBASE -->
         <div class="bg-amber-950/40 border border-amber-500/30 rounded-2xl p-4 text-xs shadow-lg space-y-3">
             <div class="flex items-center justify-between border-b border-amber-500/20 pb-2">
                 <p class="text-amber-400 font-bold flex items-center gap-1.5 text-sm">
-                    <span>🔥</span> KONFIGURASI FIREBASE CLOUD BOS:
+                    <span>🔥</span> KONFIGURASI FIREBASE CLOUD (KOLEKSI: pencarian):
                 </p>
                 <span id="firebaseStatusBadge" class="text-[10px] bg-rose-950 text-rose-300 border border-rose-800 px-2.5 py-0.5 rounded-full font-mono font-bold">
                     Belum Terhubung
@@ -154,7 +154,7 @@
                     <span>💾</span> Simpan Config Firebase
                 </button>
                 <button onclick="bacaDataDariFirebase()" class="bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold transition-all shadow-md flex items-center gap-1">
-                    <span>☁️</span> Baca Data Langsung dari Firebase
+                    <span>☁️</span> Baca & Simpan Data dari Firebase
                 </button>
             </div>
         </div>
@@ -175,11 +175,11 @@
             </div>
         </div>
 
-        <!-- 📋 SKEMA MODEL JSON STANDAR (23 FIELD BAKU) -->
+        <!-- 📋 SKEMA MODEL JSON STANDAR (SINKRON DATA NOPOL + 23 FIELD BAKU) -->
         <div class="bg-slate-800/80 border border-indigo-500/40 rounded-2xl p-4 text-xs shadow-lg space-y-3">
             <div class="flex items-center justify-between border-b border-indigo-500/20 pb-2">
                 <p class="text-indigo-300 font-bold flex items-center gap-1.5 text-sm">
-                    <span>📋</span> SKEMA MODEL JSON STANDAR (23 FIELD BAKU):
+                    <span>📋</span> SKEMA MODEL JSON STANDAR (SINKRON DATA NOPOL):
                 </p>
                 <div class="flex items-center gap-2">
                     <button onclick="toggleModelJson()" class="text-[11px] bg-indigo-950 text-indigo-300 border border-indigo-700 hover:bg-indigo-900 px-3 py-1 rounded-lg font-mono font-semibold transition-all">
@@ -192,28 +192,42 @@
             </div>
 
             <div id="modelJsonContainer" class="space-y-1">
-                <p class="text-[11px] text-slate-400">Semua berkas (XLSX, CSV, PDF, Gambar) yang diekstrak akan otomatis dipetakan persis ke 23 atribut berikut:</p>
+                <p class="text-[11px] text-slate-400">Semua berkas (XLSX, CSV, PDF, Gambar) otomatis dipetakan ke 23 atribut standar beserta kunci <span class="text-emerald-400 font-mono">nopol</span> (tanpa spasi) dan tersimpan permanen di memori aplikasi:</p>
                 <textarea id="modelJsonText" readonly class="w-full h-56 bg-[#090d16] border border-[#1e293b] rounded-xl p-3 font-mono text-xs text-emerald-400 focus:outline-none resize-none scrollbar-thin leading-relaxed"></textarea>
             </div>
         </div>
 
-        <!-- Status Data Tersimpan -->
-        <div class="bg-[#1e293b] border border-[#334155] rounded-2xl p-4 shadow-lg">
+        <!-- 💾 STATUS PENYIMPANAN PERMANEN & DAFTAR FILE DI DALAM APLIKASI -->
+        <div class="bg-[#1e293b] border border-emerald-500/40 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
-                        <span>📂</span> Status Memori Database
+                        <span>💾</span> Penyimpanan Permanen Aplikasi (Anti-Hilang Keluar Masuk)
                     </h3>
-                    <p id="statusDataLama" class="text-xs text-slate-400 mt-1">Belum ada data dimuat dari Firebase/GitHub.</p>
+                    <p id="statusDataLama" class="text-xs text-slate-400 mt-1">Memeriksa penyimpanan lokal aplikasi...</p>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                     <button onclick="bukaManagerData()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg shadow transition-all flex items-center gap-1.5">
                         <span>🔍</span> Cek / Edit / Hapus Data
                     </button>
-                    <div id="oldDataBadge" class="px-3 py-1.5 bg-slate-800 text-slate-300 text-xs font-mono rounded-lg border border-slate-700">
+                    <button onclick="konfirmasiResetStorageLokal()" class="px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 text-xs font-bold rounded-lg transition-all flex items-center gap-1">
+                        <span>🧹</span> Kosongkan Memori HP
+                    </button>
+                    <div id="oldDataBadge" class="px-3 py-1.5 bg-emerald-950/70 text-emerald-300 text-xs font-mono font-bold rounded-lg border border-emerald-700/70">
                         0 Data
                     </div>
                 </div>
+            </div>
+
+            <!-- Daftar File yang Sudah Terimpor & Tersimpan di Dalam Aplikasi -->
+            <div id="savedFilesContainer" class="hidden pt-2 border-t border-slate-700/80 space-y-2">
+                <div class="flex items-center justify-between text-[11px]">
+                    <span class="text-slate-300 font-semibold flex items-center gap-1.5">
+                        <span>📁</span> File Tersimpan di Dalam Aplikasi (Klik nama file untuk langsung membuka & mengedit datanya):
+                    </span>
+                    <span id="savedFilesCountText" class="font-mono text-emerald-400">0 File</span>
+                </div>
+                <div id="savedFilesChips" class="flex flex-wrap gap-2"></div>
             </div>
         </div>
 
@@ -225,7 +239,7 @@
             <p class="text-xs sm:text-sm text-slate-400 mt-1">
                 Format Didukung: <span class="text-emerald-400 font-semibold">.XLSX, .XLS, .CSV, .PDF, .JPG, .PNG</span>
             </p>
-            <p class="text-[11px] text-slate-500 mt-2">Dapat memilih banyak berkas sekaligus • Otomatis dipetakan ke 23 Field JSON</p>
+            <p class="text-[11px] text-slate-500 mt-2">Otomatis tersimpan permanen di aplikasi • Tidak hilang saat aplikasi ditutup/dibuka kembali</p>
             <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.pdf,.jpg,.jpeg,.png,.webp" class="hidden" multiple>
         </div>
 
@@ -250,7 +264,7 @@
             </div>
             <div id="fileList" class="text-xs text-slate-300 space-y-2 max-h-48 overflow-y-auto pr-1"></div>
             <button onclick="prosesSemuaFile()" class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2">
-                <span>⚡</span> Ekstrak, Proses & Gabungkan Semua Berkas
+                <span>⚡</span> Ekstrak, Simpan Permanen & Gabungkan Berkas
             </button>
         </div>
 
@@ -263,7 +277,7 @@
                 <button onclick="clearLog()" class="text-[10px] text-slate-500 hover:text-slate-300">Bersihkan Log</button>
             </div>
             <div id="logConsole" class="space-y-1 max-h-44 overflow-y-auto font-mono text-[11px] leading-relaxed">
-                <p class="log-info">[System] Siap memproses berkas data kendaraan...</p>
+                <p class="log-info">[System] Menginisialisasi penyimpanan permanen aplikasi (IndexedDB)...</p>
             </div>
         </div>
 
@@ -271,23 +285,23 @@
         <div id="hasilSection" class="hidden bg-[#1e293b] border border-[#334155] rounded-2xl p-6 space-y-5 shadow-2xl">
             <div class="flex items-center justify-between pb-3 border-b border-slate-700">
                 <h3 class="text-base font-extrabold text-white flex items-center gap-2">
-                    <span>✅</span> Hasil Penggabungan Data Kendaraan
+                    <span>✅</span> Ringkasan Data Kendaraan Tersimpan
                 </h3>
-                <span class="text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-3 py-1 rounded-full font-semibold">Anti-Crash Big Data</span>
+                <span class="text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-3 py-1 rounded-full font-semibold">Tersimpan Permanen</span>
             </div>
             
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center text-sm">
                 <div class="bg-[#0f172a] p-3.5 rounded-xl border border-slate-800">
                     <div id="jmlDataLama" class="text-xl sm:text-2xl font-bold text-slate-300 font-mono">0</div>
-                    <div class="text-[11px] text-slate-500 mt-1">Data Lama (Database)</div>
+                    <div class="text-[11px] text-slate-500 mt-1">Data Sebelumnya</div>
                 </div>
                 <div class="bg-[#0f172a] p-3.5 rounded-xl border border-slate-800">
                     <div id="jmlDataBaru" class="text-xl sm:text-2xl font-bold text-emerald-400 font-mono">0</div>
-                    <div class="text-[11px] text-slate-500 mt-1">Data Baru Ter-ekstrak</div>
+                    <div class="text-[11px] text-slate-500 mt-1">Data Impor Terakhir</div>
                 </div>
                 <div class="col-span-2 sm:col-span-1 bg-[#0f172a] p-3.5 rounded-xl border-2 border-emerald-500/40">
                     <div id="jmlTotal" class="text-2xl sm:text-3xl font-extrabold text-emerald-400 font-mono">0</div>
-                    <div class="text-[11px] text-emerald-300/80 mt-1">Total Data Unik Gabungan</div>
+                    <div class="text-[11px] text-emerald-300/80 mt-1">Total Data di Aplikasi</div>
                 </div>
             </div>
 
@@ -302,9 +316,10 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div>
                         <label class="block text-[11px] text-slate-400 mb-1">Format Output JSON:</label>
-                        <select id="jsonFormatSelect" onchange="updateEstimasiUkuran()" class="w-full bg-[#1e293b] border border-slate-600 text-white p-2.5 rounded-xl text-xs focus:outline-none focus:border-emerald-500">
-                            <option value="compact" selected>⚡ Compact / Minified (Ukuran 50% Lebih Kecil & Cepat)</option>
-                            <option value="pretty">📄 Pretty Print (Rapi 2 Spasi - Ukuran Lebih Besar)</option>
+                        <select id="jsonFormatSelect" onchange="perbaruiPreviewDanEstimasi()" class="w-full bg-[#1e293b] border border-slate-600 text-white p-2.5 rounded-xl text-xs focus:outline-none focus:border-emerald-500">
+                            <option value="compact" selected>⚡ Compact Array JSON (Standar API / Upload Hosting)</option>
+                            <option value="pretty">📄 Pretty Array JSON (Rapi 2 Spasi)</option>
+                            <option value="offline_db">📱 Format Object OFFLINE_SAMSAT_DATABASE (Tempel HTML)</option>
                         </select>
                     </div>
                     <div>
@@ -361,9 +376,9 @@
             <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-700">
                 <div>
                     <h3 class="text-base font-extrabold text-white flex items-center gap-2">
-                        <span>🗂️</span> Cek, Edit & Hapus Permanen Data JSON / Firebase
+                        <span>🗂️</span> Cek, Edit & Hapus Data File Tersimpan di Aplikasi
                     </h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Periksa hasil ekstraksi per file, ubah isi 23 field, atau hapus permanen dokumen dari Firebase Cloud.</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Pilih file yang sudah terimpor, edit isi 23 field kapan saja (otomatis tersimpan di aplikasi & Firebase <span class="text-amber-300 font-mono">pencarian</span>).</p>
                 </div>
                 <span id="managerCountBadge" class="text-xs font-mono font-bold bg-indigo-950 text-indigo-300 border border-indigo-700 px-3 py-1 rounded-full">
                     0 Data Ditemukan
@@ -377,7 +392,7 @@
                     <input type="text" id="searchDataInput" oninput="resetHalamanDanRender()" placeholder="Ketik kata kunci pencarian..." class="w-full bg-[#0f172a] border border-slate-600 text-white p-2.5 rounded-xl text-xs focus:outline-none focus:border-emerald-500">
                 </div>
                 <div class="md:col-span-5">
-                    <label class="block text-[11px] text-slate-400 mb-1 font-semibold">📁 Filter Berdasarkan File Hasil Ekstrak / Sumber:</label>
+                    <label class="block text-[11px] text-slate-400 mb-1 font-semibold">📁 Pilih File Tersimpan di Aplikasi:</label>
                     <select id="filterSourceSelect" onchange="resetHalamanDanRender()" class="w-full bg-[#0f172a] border border-slate-600 text-white p-2.5 rounded-xl text-xs focus:outline-none focus:border-indigo-500">
                         <option value="ALL">Semua File & Sumber Data</option>
                     </select>
@@ -392,7 +407,7 @@
                 </div>
             </div>
 
-            <!-- Toolbar Aksi Massal (Hapus Terpilih / Hapus Per File dari Firebase) -->
+            <!-- Toolbar Aksi Massal (Hapus Terpilih / Hapus Per File dari Aplikasi & Firebase) -->
             <div class="bg-[#0f172a] border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
                 <div class="flex items-center gap-3">
                     <label class="inline-flex items-center gap-2 cursor-pointer text-slate-300 font-semibold select-none">
@@ -408,7 +423,7 @@
                         <span>🗑️</span> Hapus Terpilih Permanen
                     </button>
                     <button id="btnDeleteFiltered" onclick="konfirmasiHapusMassal('filtered')" class="bg-rose-950 hover:bg-rose-900 text-rose-200 border border-rose-700 px-3 py-1.5 rounded-lg font-bold text-xs transition-all flex items-center gap-1.5">
-                        <span>🔥</span> Hapus Semua Data Filter Ini dari Firebase
+                        <span>🔥</span> Hapus Semua Data File/Filter Ini
                     </button>
                 </div>
             </div>
@@ -424,7 +439,7 @@
                             <th class="p-3">Nama Pemilik / KTP</th>
                             <th class="p-3">Kendaraan (Merk / Tipe)</th>
                             <th class="p-3">No Rangka / Mesin</th>
-                            <th class="p-3">Asal File / Sumber</th>
+                            <th class="p-3">Asal File di Aplikasi</th>
                             <th class="p-3 text-right">Aksi (Cek / Edit / Hapus)</th>
                         </tr>
                     </thead>
@@ -453,7 +468,7 @@
 
     </div>
 
-    <!-- MODAL 1: CEK & EDIT 23 FIELD JSON + SYNC FIREBASE -->
+    <!-- MODAL 1: CEK & EDIT 23 FIELD JSON + SIMPAN PERMANEN + SYNC FIREBASE -->
     <div id="editDataModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
         <div class="bg-[#1e293b] border border-slate-600 rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto">
             <!-- Modal Header -->
@@ -470,7 +485,7 @@
             <!-- Modal Body (Form 23 Field) -->
             <div class="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs flex-1">
                 <div class="flex flex-wrap items-center justify-between gap-2 bg-[#0f172a] p-3 rounded-xl border border-slate-800">
-                    <span id="editModalSourceBadge" class="text-[11px] font-mono text-indigo-300">Sumber: -</span>
+                    <span id="editModalSourceBadge" class="text-[11px] font-mono text-indigo-300">Asal File: -</span>
                     <label class="inline-flex items-center gap-2 cursor-pointer text-slate-300 font-semibold">
                         <input type="checkbox" id="editAutoUppercase" checked class="w-4 h-4 rounded accent-emerald-500">
                         <span>Otomatis Huruf Kapital (Standar Baku)</span>
@@ -484,27 +499,27 @@
             <!-- Modal Footer -->
             <div class="p-4 border-t border-slate-700 bg-slate-900/60 flex flex-wrap items-center justify-between gap-2">
                 <button onclick="hapusDariModalEdit()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5">
-                    <span>🗑️</span> Hapus Permanen dari Firebase
+                    <span>🗑️</span> Hapus Permanen
                 </button>
                 <div class="flex items-center gap-2 ml-auto">
                     <button onclick="tutupModalEdit()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs transition-all">
                         Batal
                     </button>
                     <button onclick="simpanPerubahanData()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-extrabold text-xs transition-all shadow-lg flex items-center gap-1.5">
-                        <span>💾</span> Simpan & Update Firebase
+                        <span>💾</span> Simpan Permanen & Update Firebase
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 2: KONFIRMASI HAPUS PERMANEN FIREBASE (PENGGANTI CONFIRM BROWSER) -->
+    <!-- MODAL 2: KONFIRMASI HAPUS PERMANEN (APLIKASI & FIREBASE) -->
     <div id="deleteConfirmModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-[#1e293b] border border-rose-500/50 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl">
             <div class="flex items-start gap-3">
                 <div class="text-3xl">⚠️</div>
                 <div>
-                    <h3 class="text-base font-extrabold text-white">Konfirmasi Hapus Permanen</h3>
+                    <h3 id="deleteConfirmTitle" class="text-base font-extrabold text-white">Konfirmasi Hapus Permanen</h3>
                     <p id="deleteConfirmDesc" class="text-xs text-slate-300 mt-1 leading-relaxed">
                         Apakah Anda yakin ingin menghapus data ini secara permanen?
                     </p>
@@ -513,7 +528,7 @@
 
             <div id="deleteConfirmDetailBox" class="bg-[#0f172a] border border-slate-800 rounded-xl p-3 text-[11px] font-mono text-rose-300 space-y-1"></div>
 
-            <label class="flex items-center gap-2.5 bg-rose-950/40 border border-rose-800/60 p-3 rounded-xl cursor-pointer text-xs text-rose-200 font-semibold">
+            <label id="deleteFirebaseCheckboxWrapper" class="flex items-center gap-2.5 bg-rose-950/40 border border-rose-800/60 p-3 rounded-xl cursor-pointer text-xs text-rose-200 font-semibold">
                 <input type="checkbox" id="deleteFromFirebaseCheck" checked class="w-4 h-4 rounded accent-rose-500">
                 <span>Hapus permanen juga dokumen ini dari Firebase Cloud</span>
             </label>
@@ -546,6 +561,213 @@
         let editingDataIndex = -1;
         let pendingDeletePayload = null;
 
+        // =========================================================================
+        // 💾 ENGINE PENYIMPANAN PERMANEN OFFLINE (INDEXEDDB) — ANTI-HILANG SAAT KELUAR/MASUK
+        // =========================================================================
+        const IDB_NAME = 'DataNopolEkstraktorDB_v1';
+        const IDB_STORE = 'kendaraan_tersimpan';
+        let idbInstance = null;
+
+        function bukaIndexedDB() {
+            return new Promise((resolve, reject) => {
+                if (idbInstance) {
+                    resolve(idbInstance);
+                    return;
+                }
+                if (!window.indexedDB) {
+                    reject(new Error("Browser/WebView tidak mendukung IndexedDB"));
+                    return;
+                }
+                const req = indexedDB.open(IDB_NAME, 1);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(IDB_STORE)) {
+                        db.createObjectStore(IDB_STORE, { keyPath: '_uid' });
+                    }
+                };
+                req.onsuccess = (e) => {
+                    idbInstance = e.target.result;
+                    resolve(idbInstance);
+                };
+                req.onerror = (e) => {
+                    reject(e.target.error || new Error("Gagal membuka penyimpanan lokal"));
+                };
+            });
+        }
+
+        function buatUidLokal(item, fallbackIdx = 0) {
+            if (item && item._uid) return item._uid;
+            const plat = bersihKunciIdentitas(item?.nopol || item?.plat_nomor);
+            const rangka = bersihKunciIdentitas(item?.no_rangka);
+            const mesin = bersihKunciIdentitas(item?.no_mesin);
+            const bpkb = bersihKunciIdentitas(item?.no_bpkb);
+            const stnk = bersihKunciIdentitas(item?.no_stnk);
+            const ktp = bersihKunciIdentitas(item?.no_ktp);
+            const nama = bersihKunciIdentitas(item?.nama_pemilik);
+            const tipe = bersihKunciIdentitas(item?.tipe);
+
+            if (plat) return `PLAT_${plat}`;
+            if (rangka) return `RANGKA_${rangka}`;
+            if (mesin) return `MESIN_${mesin}`;
+            if (bpkb) return `BPKB_${bpkb}`;
+            if (stnk) return `STNK_${stnk}`;
+            if (ktp && nama) return `KTPNAMA_${ktp}_${nama}_${tipe}`;
+            if (nama) return `NAMA_${nama}_${fallbackIdx}`;
+            return `ROW_${Date.now()}_${fallbackIdx}_${Math.random().toString(36).slice(2, 6)}`;
+        }
+
+        // Simpan seluruh array dataGabungan ke IndexedDB secara bertahap (aman untuk ratusan ribu data)
+        async function simpanSemuaKePenyimpananLokal(records, onProgress = null) {
+            try {
+                const db = await bukaIndexedDB();
+                const total = records.length;
+
+                // Kosongkan store lama terlebih dahulu agar sinkron 100% dengan state terbaru
+                await new Promise((resolve, reject) => {
+                    const txClear = db.transaction(IDB_STORE, 'readwrite');
+                    txClear.objectStore(IDB_STORE).clear();
+                    txClear.oncomplete = () => resolve();
+                    txClear.onerror = (e) => reject(e.target.error);
+                });
+
+                if (total === 0) return;
+
+                const CHUNK_SIZE = 4000;
+                for (let i = 0; i < total; i += CHUNK_SIZE) {
+                    const end = Math.min(i + CHUNK_SIZE, total);
+                    await new Promise((resolve, reject) => {
+                        const tx = db.transaction(IDB_STORE, 'readwrite');
+                        const store = tx.objectStore(IDB_STORE);
+
+                        for (let j = i; j < end; j++) {
+                            const item = records[j];
+                            const uid = item._uid || buatUidLokal(item, j);
+                            setMetaNonEnumerable(item, { _uid: uid });
+
+                            store.put({
+                                _uid: uid,
+                                _fbDocId: item._fbDocId || buatDocIdFirebase(item),
+                                _sourceFile: item._sourceFile || 'DATA TERSIMPAN',
+                                _syncedFirebase: Boolean(item._syncedFirebase),
+                                _importedAt: item._importedAt || Date.now(),
+                                payload: { ...item }
+                            });
+                        }
+
+                        tx.oncomplete = () => resolve();
+                        tx.onerror = (e) => reject(e.target.error);
+                    });
+
+                    if (onProgress) {
+                        const pct = Math.round((end / total) * 100);
+                        onProgress(pct, end, total);
+                    }
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            } catch (err) {
+                log(`⚠️ Gagal menyimpan ke memori permanen HP: ${err.message}`, "warn");
+            }
+        }
+
+        // Update 1 baris data yang baru diedit ke IndexedDB (instan < 5ms)
+        async function simpanSatuKePenyimpananLokal(item, oldUid = null) {
+            try {
+                const db = await bukaIndexedDB();
+                const newUid = item._uid || buatUidLokal(item, 0);
+                setMetaNonEnumerable(item, { _uid: newUid });
+
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction(IDB_STORE, 'readwrite');
+                    const store = tx.objectStore(IDB_STORE);
+                    if (oldUid && oldUid !== newUid) {
+                        store.delete(oldUid);
+                    }
+                    store.put({
+                        _uid: newUid,
+                        _fbDocId: item._fbDocId || buatDocIdFirebase(item),
+                        _sourceFile: item._sourceFile || 'EDITED',
+                        _syncedFirebase: Boolean(item._syncedFirebase),
+                        _importedAt: item._importedAt || Date.now(),
+                        payload: { ...item }
+                    });
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = (e) => reject(e.target.error);
+                });
+            } catch (err) {
+                log(`⚠️ Gagal memperbarui penyimpanan lokal: ${err.message}`, "warn");
+            }
+        }
+
+        // Hapus daftar UID tertentu dari IndexedDB
+        async function hapusDariPenyimpananLokal(uidsToDelete) {
+            if (!uidsToDelete || uidsToDelete.length === 0) return;
+            try {
+                const db = await bukaIndexedDB();
+                const CHUNK_SIZE = 4000;
+                for (let i = 0; i < uidsToDelete.length; i += CHUNK_SIZE) {
+                    const slice = uidsToDelete.slice(i, i + CHUNK_SIZE);
+                    await new Promise((resolve, reject) => {
+                        const tx = db.transaction(IDB_STORE, 'readwrite');
+                        const store = tx.objectStore(IDB_STORE);
+                        slice.forEach(uid => store.delete(uid));
+                        tx.oncomplete = () => resolve();
+                        tx.onerror = (e) => reject(e.target.error);
+                    });
+                }
+            } catch (err) {
+                log(`⚠️ Gagal menghapus dari penyimpanan lokal: ${err.message}`, "warn");
+            }
+        }
+
+        // Muat otomatis seluruh data & riwayat file yang tersimpan ketika aplikasi dibuka kembali
+        async function muatDariPenyimpananLokal() {
+            try {
+                const db = await bukaIndexedDB();
+                const rawRecords = await new Promise((resolve, reject) => {
+                    const tx = db.transaction(IDB_STORE, 'readonly');
+                    const req = tx.objectStore(IDB_STORE).getAll();
+                    req.onsuccess = () => resolve(req.result || []);
+                    req.onerror = (e) => reject(e.target.error);
+                });
+
+                if (rawRecords.length === 0) {
+                    document.getElementById('statusDataLama').innerHTML =
+                        `Belum ada data tersimpan di aplikasi. Silakan impor file atau muat dari Firebase.`;
+                    log("ℹ️ Penyimpanan permanen aplikasi siap (belum ada file tersimpan).", "info");
+                    return;
+                }
+
+                const restoredList = [];
+                for (let i = 0; i < rawRecords.length; i++) {
+                    const rec = rawRecords[i];
+                    const item = normalisasiData(rec.payload || rec);
+                    setMetaNonEnumerable(item, {
+                        _uid: rec._uid || buatUidLokal(item, i),
+                        _fbDocId: rec._fbDocId || buatDocIdFirebase(item),
+                        _sourceFile: rec._sourceFile || 'FILE TERSIMPAN',
+                        _syncedFirebase: Boolean(rec._syncedFirebase),
+                        _importedAt: rec._importedAt || Date.now()
+                    });
+                    restoredList.push(item);
+                }
+
+                dataLama = restoredList;
+                dataGabungan = [...restoredList];
+
+                document.getElementById('statusDataLama').innerHTML =
+                    `<span class="text-emerald-400 font-semibold">✅ Tersimpan Permanen di Aplikasi</span> -- <strong class="text-white">${dataGabungan.length.toLocaleString('id-ID')} kendaraan</strong> siap dicek & diedit kapan saja.`;
+                document.getElementById('jmlDataLama').textContent = dataLama.length.toLocaleString('id-ID');
+                document.getElementById('jmlDataBaru').textContent = "0 (Tersimpan)";
+
+                perbaruiTampilanHasilDanManager();
+                log(`💾 Berhasil memulihkan ${dataGabungan.length.toLocaleString('id-ID')} data dari penyimpanan permanen aplikasi!`, "success");
+            } catch (err) {
+                document.getElementById('statusDataLama').innerHTML =
+                    `Penyimpanan lokal siap digunakan.`;
+                log(`⚠️ Info penyimpanan lokal: ${err.message}`, "warn");
+            }
+        }
+
         const DAFTAR_23_FIELD = [
             { key: "plat_nomor", label: "Plat Nomor" },
             { key: "nama_pemilik", label: "Nama Pemilik" },
@@ -572,7 +794,7 @@
             { key: "tanggal_daftar", label: "Tanggal Daftar" }
         ];
 
-        // Simpan metadata internal secara non-enumerable agar ekspor JSON tetap murni 23 field
+        // Simpan metadata internal secara non-enumerable agar ekspor JSON tetap murni field kendaraan
         function setMetaNonEnumerable(obj, meta) {
             if (!obj || typeof obj !== 'object') return obj;
             for (const [k, v] of Object.entries(meta)) {
@@ -586,17 +808,19 @@
             return obj;
         }
 
+        // Document ID Firebase rapat huruf besar tanpa spasi/underscore agar 100% cocok dengan DATA NOPOL
         function buatDocIdFirebase(item) {
             if (!item) return null;
             if (item._fbDocId) return item._fbDocId;
-            const raw = (item.plat_nomor || item.no_rangka || item.no_ktp || '').trim();
+            const raw = (item.nopol || item.plat_nomor || item.no_rangka || item.no_mesin || item.no_ktp || '').trim();
             if (!raw) return null;
-            return raw.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+            return raw.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
         }
 
-        // Sample Model JSON Standar 23 Field (Format Huruf Kapital)
+        // Sample Model JSON Standar (Sinkron DATA NOPOL + 23 Field Baku)
         const SAMPLE_JSON_MODEL = [
           {
+            "nopol": "BK1899VM",
             "plat_nomor": "BK 1899 VM",
             "nama_pemilik": "TAMBENG PRANATA",
             "no_ktp": "1209091610730001",
@@ -629,14 +853,15 @@
         let fbDb = null;
         let fbUser = null;
 
-        // Unique App Identifier for Firestore Paths
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'data-kendaraan-app';
+        // Koleksi utama yang dibaca langsung oleh aplikasi DATA NOPOL
+        const KOLEKSI_DATA_NOPOL = 'pencarian';
 
-        // Inisialisasi awal
-        window.addEventListener('DOMContentLoaded', () => {
+        // Inisialisasi awal saat aplikasi dibuka
+        window.addEventListener('DOMContentLoaded', async () => {
             setupDropzone();
             loadSavedConfigs();
             tampilkanModelJsonDefault();
+            await muatDariPenyimpananLokal();
         });
 
         function tampilkanModelJsonDefault() {
@@ -667,7 +892,7 @@
                 tempInput.select();
                 document.execCommand('copy');
                 document.body.removeChild(tempInput);
-                showToast("Model JSON 23 Field berhasil disalin!", "success");
+                showToast("Model JSON Sinkron DATA NOPOL berhasil disalin!", "success");
             } catch (e) {
                 showToast("Gagal menyalin model JSON", "warn");
             }
@@ -729,7 +954,7 @@
                         if (u) {
                             document.getElementById('firebaseStatusBadge').className = "text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-2.5 py-0.5 rounded-full font-mono font-bold";
                             document.getElementById('firebaseStatusBadge').innerText = "🔥 Terhubung ke Firebase";
-                            log("🔥 Firebase Cloud berhasil terhubung & diautentikasi!", "success");
+                            log("🔥 Firebase Cloud berhasil terhubung ke koleksi 'pencarian' DATA NOPOL!", "success");
                         }
                     });
 
@@ -764,19 +989,19 @@
             window.initFirebaseSystem();
         }
 
-        // BACA DATA DARI FIREBASE CLOUD
+        // BACA DATA DARI FIREBASE CLOUD (KOLEKSI 'pencarian' DATA NOPOL) & SIMPAN PERMANEN KE APLIKASI
         async function bacaDataDariFirebase() {
             if (!fbDb || !fbUser) {
                 showToast("Firebase belum terhubung! Periksa konfigurasi Anda.", "warn");
                 return;
             }
 
-            log("☁️ Mengambil seluruh data kendaraan dari Firebase Cloud...", "info");
+            log("☁️ Mengambil seluruh data kendaraan dari koleksi 'pencarian' Firebase Cloud...", "info");
             updateProgressStatus("Membaca data dari Firebase...", 20);
 
             try {
                 const { collection, getDocs } = window.FB_SDK;
-                const colRef = collection(fbDb, 'artifacts', appId, 'public', 'data', 'data_kendaraan');
+                const colRef = collection(fbDb, KOLEKSI_DATA_NOPOL);
                 const snapshot = await getDocs(colRef);
 
                 const dataFb = [];
@@ -790,20 +1015,11 @@
                     dataFb.push(item);
                 });
 
+                await gabungkanData(dataFb, true);
                 hideProgress();
-                dataLama = dataFb;
-                dataGabungan = [...dataFb];
-                selectedIndices.clear();
 
-                document.getElementById('statusDataLama').innerHTML = 
-                    `<span class="text-emerald-400 font-semibold">🔥 Terhubung ke Firebase Cloud</span> -- <strong class="text-white">${dataLama.length.toLocaleString('id-ID')} kendaraan</strong> tersimpan.`;
-                document.getElementById('oldDataBadge').innerText = `${dataLama.length.toLocaleString('id-ID')} Data`;
-                document.getElementById('jmlDataLama').textContent = dataLama.length.toLocaleString('id-ID');
-
-                perbaruiTampilanHasilDanManager();
-
-                log(`✅ Berhasil membaca ${dataLama.length.toLocaleString('id-ID')} data kendaraan dari Firebase Cloud!`, "success");
-                showToast(`Berhasil memuat ${dataLama.length.toLocaleString('id-ID')} data dari Firebase`, "success");
+                log(`✅ Berhasil membaca & menyimpan permanen ${dataFb.length.toLocaleString('id-ID')} data dari Firebase!`, "success");
+                showToast(`Berhasil memuat & menyimpan ${dataFb.length.toLocaleString('id-ID')} data dari Firebase`, "success");
             } catch (err) {
                 hideProgress();
                 log(`❌ Gagal membaca Firebase: ${err.message}`, "error");
@@ -811,7 +1027,7 @@
             }
         }
 
-        // SYNC / UPLOAD HASIL EKSTRAKSI KE FIREBASE CLOUD
+        // SYNC / UPLOAD HASIL EKSTRAKSI KE FIREBASE CLOUD (KOLEKSI 'pencarian' DATA NOPOL)
         async function syncKeFirebaseCloud() {
             if (!fbDb || !fbUser) {
                 showToast("Firebase belum terhubung! Masukkan config Firebase dulu.", "warn");
@@ -823,12 +1039,12 @@
                 return;
             }
 
-            log(`🔥 Memulai Sync ${dataGabungan.length.toLocaleString('id-ID')} data ke Firebase Cloud...`, "info");
+            log(`🔥 Memulai Sync ${dataGabungan.length.toLocaleString('id-ID')} data ke koleksi '${KOLEKSI_DATA_NOPOL}' Firebase Cloud...`, "info");
             updateProgressStatus("Menyiapkan Sync Firebase...", 0);
 
-            const { collection, doc, writeBatch } = window.FB_SDK;
+            const { doc, writeBatch } = window.FB_SDK;
             const totalData = dataGabungan.length;
-            const chunkSize = 400; // Safe batch limit (Firestore max 500 per batch)
+            const chunkSize = 400;
             let processed = 0;
 
             try {
@@ -837,12 +1053,15 @@
                     const batch = writeBatch(fbDb);
 
                     chunk.forEach(item => {
-                        const platOrRangka = item._fbDocId || (item.plat_nomor || item.no_rangka || item.no_ktp || `id_${Math.random()}`)
-                            .replace(/[^a-zA-Z0-9]/g, '_')
+                        const platOrRangka = item._fbDocId || (item.nopol || item.plat_nomor || item.no_rangka || item.no_mesin || item.no_ktp || `ID${Math.random().toString(36).substr(2, 8)}`)
+                            .replace(/[^a-zA-Z0-9]/g, '')
                             .toUpperCase();
                         
-                        const docRef = doc(fbDb, 'artifacts', appId, 'public', 'data', 'data_kendaraan', platOrRangka);
-                        batch.set(docRef, item, { merge: true });
+                        const docRef = doc(fbDb, KOLEKSI_DATA_NOPOL, platOrRangka);
+                        batch.set(docRef, {
+                            ...item,
+                            waktu_ditemukan: new Date()
+                        }, { merge: true });
                         setMetaNonEnumerable(item, {
                             _fbDocId: platOrRangka,
                             _syncedFirebase: true
@@ -854,14 +1073,16 @@
                     const percent = Math.round((processed / totalData) * 100);
 
                     updateProgressStatus(`Syncing ke Firebase: ${processed.toLocaleString('id-ID')} / ${totalData.toLocaleString('id-ID')} (${percent}%)`, percent);
-                    log(`☁️ Batch terunggah: ${processed.toLocaleString('id-ID')} / ${totalData.toLocaleString('id-ID')}`, "info");
+                    log(`☁️ Batch terunggah ke '${KOLEKSI_DATA_NOPOL}': ${processed.toLocaleString('id-ID')} / ${totalData.toLocaleString('id-ID')}`, "info");
                     await new Promise(r => setTimeout(r, 50));
                 }
 
+                // Simpan status _syncedFirebase ke penyimpanan lokal aplikasi
+                await simpanSemuaKePenyimpananLokal(dataGabungan);
                 hideProgress();
                 renderTabelManager();
-                log(`🎉 SYNC FIREBASE SUKSES! ${dataGabungan.length.toLocaleString('id-ID')} data tersimpan di Cloud!`, "success");
-                showToast(`Sukses Sync ${dataGabungan.length.toLocaleString('id-ID')} data ke Firebase!`, "success", "Sync Berhasil");
+                log(`🎉 SYNC FIREBASE SUKSES! ${dataGabungan.length.toLocaleString('id-ID')} data langsung siap dicari di aplikasi DATA NOPOL!`, "success");
+                showToast(`Sukses Sync ${dataGabungan.length.toLocaleString('id-ID')} data ke DATA NOPOL!`, "success", "Sync Berhasil");
 
             } catch (err) {
                 hideProgress();
@@ -909,7 +1130,7 @@
             log("Log dibersihkan.", "info");
         }
 
-        // BACA DATA LAMA DARI GITHUB
+        // BACA DATA LAMA DARI GITHUB & SIMPAN PERMANEN KE APLIKASI
         async function bacaDataLama() {
             let url = document.getElementById('githubDataUrl').value.trim();
             if (!url) url = localStorage.getItem('github_data_url') || '';
@@ -921,27 +1142,28 @@
             }
 
             localStorage.setItem('github_data_url', url);
-            log("🔄 Menghubungkan ke GitHub untuk mengambil data lama...", "info");
+            log("🔄 Menghubungkan ke GitHub untuk mengambil data...", "info");
             try {
                 const res = await fetch(url, { cache: "no-store" });
                 if (!res.ok) throw new Error("File belum ada atau URL tidak dapat diakses");
                 
                 const data = await res.json();
-                dataLama = Array.isArray(data) ? data : (data.data || []);
+                const rawList = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : Object.values(data || {}));
+                const parsedList = rawList.map(item => {
+                    const norm = normalisasiData(item);
+                    setMetaNonEnumerable(norm, {
+                        _sourceFile: 'BACKUP GITHUB',
+                        _syncedFirebase: false
+                    });
+                    return norm;
+                });
 
-                document.getElementById('statusDataLama').innerHTML = 
-                    `<span class="text-emerald-400 font-semibold">✅ Terhubung ke GitHub</span> -- <strong class="text-white">${dataLama.length.toLocaleString('id-ID')} kendaraan</strong> tersimpan.`;
-                document.getElementById('oldDataBadge').innerText = `${dataLama.length.toLocaleString('id-ID')} Data`;
-                document.getElementById('jmlDataLama').textContent = dataLama.length.toLocaleString('id-ID');
-
-                log(`✅ Berhasil memuat ${dataLama.length.toLocaleString('id-ID')} data kendaraan dari GitHub`, "success");
-                showToast(`Berhasil membaca ${dataLama.length.toLocaleString('id-ID')} data lama dari GitHub`, "success");
+                await gabungkanData(parsedList, true);
+                log(`✅ Berhasil memuat & menyimpan permanen ${parsedList.length.toLocaleString('id-ID')} data dari GitHub`, "success");
+                showToast(`Berhasil membaca & menyimpan ${parsedList.length.toLocaleString('id-ID')} data dari GitHub`, "success");
             } catch (err) {
-                dataLama = [];
-                document.getElementById('statusDataLama').innerHTML = 
-                    `<span class="text-amber-400 font-semibold">ℹ️ Data lama belum ada / URL baru</span> -- Akan memulai dari data baru.`;
-                document.getElementById('oldDataBadge').innerText = `0 Data`;
-                log(`ℹ️ Info data lama: ${err.message}`, "info");
+                log(`ℹ️ Info GitHub: ${err.message}`, "info");
+                showToast(`Gagal membaca GitHub: ${err.message}`, "warn");
             }
         }
 
@@ -990,7 +1212,7 @@
             fileTerpilih = [];
             document.getElementById('fileInput').value = '';
             document.getElementById('fileInfo').classList.add('hidden');
-            log("Daftar berkas dibersihkan.", "info");
+            log("Daftar berkas antrean dibersihkan.", "info");
         }
 
         function tampilkanInfoFile() {
@@ -1050,7 +1272,7 @@
             return "";
         }
 
-        // FORMATTER STRIKS: MENGENALKAN TEPAT 23 FIELD STANDAR + AUTO-UPPERCASE
+        // FORMATTER STRIKS: 23 FIELD STANDAR + KUNCI 'nopol' TANPA SPASI (100% SINKRON DATA NOPOL)
         function normalisasiData(row) {
             const getVal = (...kunci) => normalisasiAmbil(row, ...kunci);
 
@@ -1093,11 +1315,13 @@
             }
 
             const toUpper = (val) => val ? String(val).trim().toUpperCase() : "";
+            const toUpperClean = (val) => val ? String(val).replace(/\s+/g, '').toUpperCase() : "";
 
             return {
+                "nopol": toUpperClean(plat_nomor),
                 "plat_nomor": toUpper(plat_nomor),
                 "nama_pemilik": toUpper(nama_pemilik),
-                "no_ktp": toUpper(no_ktp),
+                "no_ktp": toUpperClean(no_ktp),
                 "email": toUpper(email),
                 "no_hp": toUpper(no_hp),
                 "pekerjaan": toUpper(pekerjaan),
@@ -1109,8 +1333,8 @@
                 "warna_kendaraan": toUpper(warna_kendaraan),
                 "warna_tnkb": toUpper(warna_tnkb),
                 "bbm": toUpper(bbm),
-                "no_rangka": toUpper(no_rangka),
-                "no_mesin": toUpper(no_mesin),
+                "no_rangka": toUpperClean(no_rangka),
+                "no_mesin": toUpperClean(no_mesin),
                 "no_bpkb": toUpper(no_bpkb),
                 "no_stnk": toUpper(no_stnk),
                 "no_faktur": toUpper(no_faktur),
@@ -1221,12 +1445,11 @@
 
                     if (hasAnyData) {
                         const norm = normalisasiData(rowObj);
-                        if (norm.plat_nomor || norm.nama_pemilik || norm.no_rangka || norm.no_ktp || norm.no_mesin || norm.no_bpkb || norm.no_stnk || norm.no_hp || norm.merk || norm.tipe) {
+                        if (norm.nopol || norm.plat_nomor || norm.nama_pemilik || norm.no_rangka || norm.no_ktp || norm.no_mesin || norm.no_bpkb || norm.no_stnk || norm.no_hp || norm.merk || norm.tipe) {
                             hasil.push(norm);
                         }
                     }
 
-                    // Kosongkan baris yang sudah diproses untuk hemat RAM
                     rows[i] = null;
 
                     if (i % 5000 === 0 || i === totalBaris - 1) {
@@ -1310,6 +1533,7 @@
             
             const dataBaru = [];
             const totalFile = fileTerpilih.length;
+            const waktuImpor = Date.now();
 
             for (let i = 0; i < totalFile; i++) {
                 const file = fileTerpilih[i];
@@ -1333,7 +1557,8 @@
                     for (let k = 0; k < extractedRows.length; k++) {
                         setMetaNonEnumerable(extractedRows[k], {
                             _sourceFile: file.name,
-                            _syncedFirebase: false
+                            _syncedFirebase: false,
+                            _importedAt: waktuImpor
                         });
                         dataBaru.push(extractedRows[k]);
                     }
@@ -1347,6 +1572,7 @@
             log(`📊 Total ${dataBaru.length.toLocaleString('id-ID')} data baru berhasil diekstrak!`, "success");
 
             await gabungkanData(dataBaru);
+            clearSelectedFiles();
             hideProgress();
         }
 
@@ -1361,11 +1587,11 @@
             return NILAI_PLACEHOLDER_SET.has(cleaned) ? '' : cleaned;
         }
 
-        async function gabungkanData(dataBaru) {
-            log("🔄 Menggabungkan data & memverifikasi kelengkapan seluruh baris...", "info");
+        async function gabungkanData(dataBaru, silentScroll = false) {
+            log("🔄 Menggabungkan data & menyimpan permanen ke memori aplikasi...", "info");
             
             const kunciUnik = (item, fallbackIdx) => {
-                const plat = bersihKunciIdentitas(item.plat_nomor);
+                const plat = bersihKunciIdentitas(item.nopol || item.plat_nomor);
                 const rangka = bersihKunciIdentitas(item.no_rangka);
                 const mesin = bersihKunciIdentitas(item.no_mesin);
                 const bpkb = bersihKunciIdentitas(item.no_bpkb);
@@ -1385,98 +1611,144 @@
             };
 
             const mapData = new Map();
+            const jumlahSebelum = dataGabungan.length;
             const totalBaruCount = dataBaru.length;
 
-            // 1. Masukkan data lama dulu
-            for (let i = 0; i < dataLama.length; i++) {
-                const oldItem = dataLama[i];
+            // 1. Masukkan data yang sudah ada di aplikasi sebelumnya
+            for (let i = 0; i < dataGabungan.length; i++) {
+                const oldItem = dataGabungan[i];
                 const k = kunciUnik(oldItem, `LAMA_${i}`);
                 const normOld = normalisasiData(oldItem);
                 setMetaNonEnumerable(normOld, {
+                    _uid: oldItem._uid || k,
                     _fbDocId: oldItem._fbDocId || buatDocIdFirebase(normOld),
                     _sourceFile: oldItem._sourceFile || 'DATABASE LAMA',
-                    _syncedFirebase: Boolean(oldItem._syncedFirebase)
+                    _syncedFirebase: Boolean(oldItem._syncedFirebase),
+                    _importedAt: oldItem._importedAt || Date.now()
                 });
                 mapData.set(k, normOld);
                 if (i % 15000 === 0 && i > 0) await new Promise(r => setTimeout(r, 0));
             }
 
-            // 2. Masukkan data baru secara bertahap agar UI tidak macet dan 100% data terjaga
+            // 2. Masukkan data baru secara bertahap
             for (let i = 0; i < totalBaruCount; i++) {
                 const newItem = dataBaru[i];
-                const k = kunciUnik(newItem, `BARU_${i}`);
+                const k = kunciUnik(newItem, `BARU_${Date.now()}_${i}`);
                 const existing = mapData.get(k);
                 const normNew = normalisasiData(newItem);
                 setMetaNonEnumerable(normNew, {
+                    _uid: (existing && existing._uid) || k,
                     _fbDocId: (existing && existing._fbDocId) || buatDocIdFirebase(normNew),
                     _sourceFile: newItem._sourceFile || 'FILE EKSTRAKSI',
-                    _syncedFirebase: Boolean(existing && existing._syncedFirebase)
+                    _syncedFirebase: Boolean(newItem._syncedFirebase || (existing && existing._syncedFirebase)),
+                    _importedAt: newItem._importedAt || Date.now()
                 });
                 mapData.set(k, normNew);
-                dataBaru[i] = null; // Bebaskan referensi memori
+                dataBaru[i] = null;
                 if (i % 15000 === 0 && i > 0) {
                     const pct = Math.round((i / totalBaruCount) * 100);
-                    updateProgressStatus(`Memproses data: ${i.toLocaleString('id-ID')} / ${totalBaruCount.toLocaleString('id-ID')} (${pct}%)`, pct);
+                    updateProgressStatus(`Menggabungkan data: ${i.toLocaleString('id-ID')} / ${totalBaruCount.toLocaleString('id-ID')} (${pct}%)`, pct);
                     await new Promise(r => setTimeout(r, 0));
                 }
             }
             dataBaru.length = 0;
 
             dataGabungan = Array.from(mapData.values());
-            mapData.clear(); // Bersihkan Map dari memori
+            dataLama = [...dataGabungan];
+            mapData.clear();
             selectedIndices.clear();
 
-            const pertambahanBersih = dataGabungan.length - dataLama.length;
+            // 3. Simpan permanen seluruh hasil gabungan ke IndexedDB agar tidak hilang saat keluar masuk aplikasi
+            updateProgressStatus("Menyimpan permanen ke memori aplikasi...", 95);
+            await simpanSemuaKePenyimpananLokal(dataGabungan, (pct, done, all) => {
+                updateProgressStatus(`Menyimpan permanen: ${done.toLocaleString('id-ID')} / ${all.toLocaleString('id-ID')} (${pct}%)`, pct);
+            });
+
+            const pertambahanBersih = dataGabungan.length - jumlahSebelum;
 
             // Reset panel download sebelumnya
             document.getElementById('downloadReadyBox').classList.add('hidden');
 
-            // Update UI Tampilan Hasil
+            // Update UI Tampilan Hasil & Status Penyimpanan Permanen
+            document.getElementById('statusDataLama').innerHTML =
+                `<span class="text-emerald-400 font-semibold">✅ Tersimpan Permanen di Aplikasi</span> -- <strong class="text-white">${dataGabungan.length.toLocaleString('id-ID')} kendaraan</strong> siap dicek & diedit kapan saja.`;
             document.getElementById('hasilSection').classList.remove('hidden');
-            document.getElementById('jmlDataLama').textContent = dataLama.length.toLocaleString('id-ID');
-            document.getElementById('jmlDataBaru').textContent = `${totalBaruCount.toLocaleString('id-ID')} (+${pertambahanBersih.toLocaleString('id-ID')} unik)`;
+            document.getElementById('jmlDataLama').textContent = jumlahSebelum.toLocaleString('id-ID');
+            document.getElementById('jmlDataBaru').textContent = `${totalBaruCount.toLocaleString('id-ID')} (+${Math.max(0, pertambahanBersih).toLocaleString('id-ID')} unik)`;
             document.getElementById('jmlTotal').textContent = dataGabungan.length.toLocaleString('id-ID');
 
-            updateEstimasiUkuran();
             perbaruiTampilanHasilDanManager();
 
-            log(`🎉 PENGGABUNGAN SELESAI! Total siap unduh & kelola: ${dataGabungan.length.toLocaleString('id-ID')} kendaraan (100% utuh).`, "success");
-            showToast(`Selesai! ${dataGabungan.length.toLocaleString('id-ID')} data siap dicek, diedit & diunduh`, "success", "Sukses");
-            
-            document.getElementById('hasilSection').scrollIntoView({ behavior: 'smooth' });
+            log(`🎉 SELESAI & TERSIMPAN PERMANEN! Total ${dataGabungan.length.toLocaleString('id-ID')} kendaraan aman di memori aplikasi.`, "success");
+            if (!silentScroll) {
+                showToast(`Selesai! ${dataGabungan.length.toLocaleString('id-ID')} data tersimpan permanen & siap diedit kapan saja`, "success", "Tersimpan Permanen");
+                document.getElementById('hasilSection').scrollIntoView({ behavior: 'smooth' });
+            }
         }
 
         // =========================================================================
-        // 🔍 FITUR CEK, EDIT & HAPUS PERMANEN DATA JSON / FIREBASE
+        // 🔍 FITUR CEK, EDIT & HAPUS PERMANEN DATA FILE TERSIMPAN DI APLIKASI
         // =========================================================================
         function bukaManagerData() {
             if (dataGabungan.length === 0 && dataLama.length > 0) {
                 dataGabungan = [...dataLama];
             }
             if (dataGabungan.length === 0) {
-                showToast("Belum ada data di memori. Silakan ekstrak berkas atau klik 'Baca Data Langsung dari Firebase'.", "warn");
+                showToast("Belum ada data tersimpan di aplikasi. Silakan impor berkas terlebih dahulu.", "warn");
                 return;
             }
             perbaruiTampilanHasilDanManager();
             document.getElementById('dataManagerSection').scrollIntoView({ behavior: 'smooth' });
         }
 
+        function pilihFileDariKartuAtas(namaFile) {
+            bukaManagerData();
+            const sourceSelect = document.getElementById('filterSourceSelect');
+            sourceSelect.value = namaFile;
+            resetHalamanDanRender();
+            showToast(`Menampilkan data dari file: ${namaFile}`, "info", "Filter File Aktif");
+        }
+
+        function buatPreviewSampleText(sampleItems, formatMode) {
+            if (!sampleItems || sampleItems.length === 0) return '[]';
+            if (formatMode === 'offline_db') {
+                const objMap = {};
+                sampleItems.forEach((item, idx) => {
+                    const rawKey = (item.nopol || item.plat_nomor || item.no_rangka || item.no_mesin || item.no_ktp || `DATA_${idx + 1}`)
+                        .replace(/[^a-zA-Z0-9]/g, '')
+                        .toUpperCase();
+                    const finalKey = objMap[rawKey] ? `${rawKey}_${idx + 1}` : rawKey;
+                    objMap[finalKey] = item;
+                });
+                return JSON.stringify(objMap, null, 2);
+            }
+            return JSON.stringify(sampleItems, null, 2);
+        }
+
+        function perbaruiPreviewDanEstimasi() {
+            updateEstimasiUkuran();
+            const formatMode = document.getElementById('jsonFormatSelect').value;
+            const samplePreview = dataGabungan.slice(0, 2);
+            document.getElementById('jsonPreviewText').value = buatPreviewSampleText(samplePreview, formatMode);
+        }
+
         function perbaruiTampilanHasilDanManager() {
             // Update counters & preview JSON
             document.getElementById('jmlTotal').textContent = dataGabungan.length.toLocaleString('id-ID');
             document.getElementById('oldDataBadge').innerText = `${dataGabungan.length.toLocaleString('id-ID')} Data`;
-            updateEstimasiUkuran();
+            perbaruiPreviewDanEstimasi();
 
-            const samplePreview = dataGabungan.slice(0, 2);
-            document.getElementById('jsonPreviewText').value = JSON.stringify(samplePreview, null, 2);
-
-            // Tampilkan panel hasil & manager
+            // Tampilkan panel hasil & manager jika ada data
+            const savedFilesContainer = document.getElementById('savedFilesContainer');
             if (dataGabungan.length > 0) {
                 document.getElementById('hasilSection').classList.remove('hidden');
                 document.getElementById('dataManagerSection').classList.remove('hidden');
+                savedFilesContainer.classList.remove('hidden');
+            } else {
+                savedFilesContainer.classList.add('hidden');
             }
 
-            // Isi dropdown daftar sumber file unik
+            // Isi dropdown daftar sumber file unik & chips kartu file di bagian atas
             const sourceSelect = document.getElementById('filterSourceSelect');
             const prevVal = sourceSelect.value || 'ALL';
             const sourcesCount = new Map();
@@ -1487,10 +1759,24 @@
             }
 
             let optsHtml = `<option value="ALL">Semua File & Sumber Data (${dataGabungan.length.toLocaleString('id-ID')} data)</option>`;
+            let chipsHtml = '';
             sourcesCount.forEach((cnt, srcName) => {
                 const safeLabel = escapeHtml(srcName);
+                const jsSafeName = srcName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                 optsHtml += `<option value="${safeLabel}">${safeLabel} (${cnt.toLocaleString('id-ID')} data)</option>`;
+                chipsHtml += `
+                    <button type="button" onclick="pilihFileDariKartuAtas('${jsSafeName}')"
+                            class="inline-flex items-center gap-1.5 bg-[#0f172a] hover:bg-indigo-950 border border-slate-700 hover:border-indigo-500 text-slate-200 px-3 py-1.5 rounded-xl text-[11px] font-mono transition-all shadow-sm">
+                        <span class="text-emerald-400">📄</span>
+                        <span class="font-semibold max-w-[200px] truncate">${safeLabel}</span>
+                        <span class="bg-slate-800 text-emerald-300 px-1.5 py-0.5 rounded text-[10px]">${cnt.toLocaleString('id-ID')}</span>
+                    </button>
+                `;
             });
+
+            document.getElementById('savedFilesCountText').innerText = `${sourcesCount.size} File Tersimpan`;
+            document.getElementById('savedFilesChips').innerHTML = chipsHtml;
+
             sourceSelect.innerHTML = optsHtml;
             if ([...sourcesCount.keys()].includes(prevVal)) {
                 sourceSelect.value = prevVal;
@@ -1521,7 +1807,7 @@
                 if (sourceFilter !== 'ALL' && itemSource !== sourceFilter) continue;
 
                 if (query) {
-                    const hay = `${item.plat_nomor} ${item.nama_pemilik} ${item.no_rangka} ${item.no_mesin} ${item.no_ktp} ${item.no_hp} ${item.merk} ${item.tipe}`;
+                    const hay = `${item.nopol} ${item.plat_nomor} ${item.nama_pemilik} ${item.no_rangka} ${item.no_mesin} ${item.no_ktp} ${item.no_hp} ${item.merk} ${item.tipe}`;
                     if (!hay.includes(query)) continue;
                 }
                 matchedIndices.push(i);
@@ -1574,8 +1860,8 @@
                 if (!isChecked) allPageChecked = false;
 
                 const fbStatus = item._syncedFirebase
-                    ? `<span class="inline-block text-[10px] bg-amber-950/80 text-amber-300 border border-amber-700/70 px-1.5 py-0.5 rounded font-mono">🔥 Cloud</span>`
-                    : `<span class="inline-block text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-1.5 py-0.5 rounded font-mono">Lokal</span>`;
+                    ? `<span class="inline-block text-[10px] bg-amber-950/80 text-amber-300 border border-amber-700/70 px-1.5 py-0.5 rounded font-mono">🔥 Cloud + HP</span>`
+                    : `<span class="inline-block text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-800/70 px-1.5 py-0.5 rounded font-mono">💾 Tersimpan</span>`;
 
                 return `
                     <tr class="hover:bg-slate-800/60 transition-colors ${isChecked ? 'bg-indigo-950/30' : ''}">
@@ -1584,7 +1870,7 @@
                         </td>
                         <td class="p-3 font-mono text-slate-400">${(startIdx + pos + 1).toLocaleString('id-ID')}</td>
                         <td class="p-3 font-mono font-bold text-emerald-400 whitespace-nowrap">
-                            ${escapeHtml(item.plat_nomor || '-')}
+                            ${escapeHtml(item.plat_nomor || item.nopol || '-')}
                             <div class="mt-0.5">${fbStatus}</div>
                         </td>
                         <td class="p-3">
@@ -1648,8 +1934,8 @@
 
             editingDataIndex = dataIdx;
             const docId = buatDocIdFirebase(item) || '(Belum punya ID unik)';
-            document.getElementById('editModalSubtitle').innerText = `Doc ID Firebase: ${docId} ${item._syncedFirebase ? '• Tersinkron di Cloud' : '• Belum di-sync'}`;
-            document.getElementById('editModalSourceBadge').innerText = `Sumber File: ${item._sourceFile || '-'}`;
+            document.getElementById('editModalSubtitle').innerText = `Doc ID Firebase (${KOLEKSI_DATA_NOPOL}): ${docId} ${item._syncedFirebase ? '• Tersinkron di Cloud' : '• Tersimpan Permanen di Aplikasi'}`;
+            document.getElementById('editModalSourceBadge').innerText = `Asal File di Aplikasi: ${item._sourceFile || '-'}`;
 
             const grid = document.getElementById('editFieldsGrid');
             grid.innerHTML = DAFTAR_23_FIELD.map(f => `
@@ -1672,6 +1958,7 @@
 
             const oldItem = dataGabungan[editingDataIndex];
             const oldDocId = buatDocIdFirebase(oldItem);
+            const oldUid = oldItem._uid;
             const autoUpper = document.getElementById('editAutoUppercase').checked;
 
             const updatedObj = {};
@@ -1680,43 +1967,54 @@
                 updatedObj[f.key] = autoUpper ? rawVal.toUpperCase() : rawVal;
             });
 
+            if (autoUpper) {
+                updatedObj.no_ktp = (updatedObj.no_ktp || '').replace(/\s+/g, '');
+                updatedObj.no_rangka = (updatedObj.no_rangka || '').replace(/\s+/g, '');
+                updatedObj.no_mesin = (updatedObj.no_mesin || '').replace(/\s+/g, '');
+            }
+            updatedObj.nopol = (updatedObj.plat_nomor || '').replace(/\s+/g, '').toUpperCase();
+
             const newDocId = buatDocIdFirebase(updatedObj) || oldDocId;
+            const newUid = buatUidLokal(updatedObj, editingDataIndex);
 
             setMetaNonEnumerable(updatedObj, {
+                _uid: newUid,
                 _fbDocId: newDocId,
                 _sourceFile: oldItem._sourceFile || 'EDITED',
-                _syncedFirebase: oldItem._syncedFirebase || false
+                _syncedFirebase: oldItem._syncedFirebase || false,
+                _importedAt: oldItem._importedAt || Date.now()
             });
 
-            // Update di memori lokal
+            // 1. Update di memori RAM & langsung simpan permanen ke IndexedDB aplikasi
             dataGabungan[editingDataIndex] = updatedObj;
-            if (oldDocId) {
-                const idxLama = dataLama.findIndex(d => buatDocIdFirebase(d) === oldDocId);
-                if (idxLama !== -1) dataLama[idxLama] = updatedObj;
-            }
+            dataLama = [...dataGabungan];
+            await simpanSatuKePenyimpananLokal(updatedObj, oldUid);
 
-            // Jika Firebase terhubung, langsung update dokumen di Firestore
+            // 2. Jika Firebase terhubung, langsung update dokumen di koleksi 'pencarian' Firestore
             if (fbDb && fbUser && newDocId) {
                 try {
                     const { doc, setDoc, deleteDoc } = window.FB_SDK;
-                    // Jika Plat Nomor / ID dokumen berubah, hapus dokumen ID lama agar tidak dobel
                     if (oldDocId && oldDocId !== newDocId) {
-                        const oldRef = doc(fbDb, 'artifacts', appId, 'public', 'data', 'data_kendaraan', oldDocId);
+                        const oldRef = doc(fbDb, KOLEKSI_DATA_NOPOL, oldDocId);
                         await deleteDoc(oldRef);
                     }
-                    const newRef = doc(fbDb, 'artifacts', appId, 'public', 'data', 'data_kendaraan', newDocId);
-                    await setDoc(newRef, updatedObj, { merge: true });
+                    const newRef = doc(fbDb, KOLEKSI_DATA_NOPOL, newDocId);
+                    await setDoc(newRef, {
+                        ...updatedObj,
+                        waktu_ditemukan: new Date()
+                    }, { merge: true });
                     setMetaNonEnumerable(updatedObj, { _syncedFirebase: true });
+                    await simpanSatuKePenyimpananLokal(updatedObj, newUid);
 
-                    log(`✏️ Data [${updatedObj.plat_nomor || newDocId}] berhasil diperbarui di Lokal & Firebase Cloud!`, "success");
-                    showToast("Perubahan berhasil disimpan & di-update ke Firebase!", "success");
+                    log(`✏️ Data [${updatedObj.nopol || newDocId}] tersimpan permanen di Aplikasi & Firebase!`, "success");
+                    showToast("Perubahan tersimpan permanen di Aplikasi & Firebase!", "success");
                 } catch (err) {
-                    log(`⚠️ Tersimpan lokal, namun gagal update Firebase: ${err.message}`, "warn");
-                    showToast(`Tersimpan lokal, gagal update Firebase: ${err.message}`, "warn");
+                    log(`💾 Tersimpan permanen di Aplikasi, namun gagal update Firebase: ${err.message}`, "warn");
+                    showToast(`Tersimpan permanen di Aplikasi (Firebase offline/error)`, "success");
                 }
             } else {
-                log(`✏️ Data [${updatedObj.plat_nomor || '-'}] berhasil diperbarui di memori JSON lokal.`, "success");
-                showToast("Perubahan data JSON berhasil disimpan!", "success");
+                log(`💾 Data [${updatedObj.nopol || '-'}] berhasil diperbarui & tersimpan permanen di Aplikasi.`, "success");
+                showToast("Perubahan berhasil disimpan permanen di Aplikasi!", "success");
             }
 
             tutupModalEdit();
@@ -1730,7 +2028,7 @@
             konfirmasiHapusSatu(targetIdx);
         }
 
-        // MODAL KONFIRMASI & EKSEKUSI HAPUS PERMANEN FIREBASE
+        // MODAL KONFIRMASI & EKSEKUSI HAPUS PERMANEN (APLIKASI + FIREBASE)
         function konfirmasiHapusSatu(dataIdx) {
             const item = dataGabungan[dataIdx];
             if (!item) return;
@@ -1738,14 +2036,16 @@
             const docId = buatDocIdFirebase(item) || '-';
             pendingDeletePayload = { mode: 'single', indices: [dataIdx] };
 
+            document.getElementById('deleteConfirmTitle').innerText = "Konfirmasi Hapus Permanen";
             document.getElementById('deleteConfirmDesc').innerText =
-                "Anda akan menghapus 1 data kendaraan berikut dari memori JSON dan Firebase Cloud:";
+                "Anda akan menghapus 1 data kendaraan berikut dari penyimpanan aplikasi dan Firebase Cloud:";
             document.getElementById('deleteConfirmDetailBox').innerHTML = `
-                <div>Plat Nomor : <span class="text-white font-bold">${escapeHtml(item.plat_nomor || '-')}</span></div>
+                <div>Plat Nomor : <span class="text-white font-bold">${escapeHtml(item.plat_nomor || item.nopol || '-')}</span></div>
                 <div>Pemilik    : <span class="text-white">${escapeHtml(item.nama_pemilik || '-')}</span></div>
-                <div>No Rangka  : <span class="text-white">${escapeHtml(item.no_rangka || '-')}</span></div>
+                <div>Asal File  : <span class="text-indigo-300">${escapeHtml(item._sourceFile || '-')}</span></div>
                 <div>Doc ID FB  : <span class="text-amber-300">${escapeHtml(docId)}</span></div>
             `;
+            document.getElementById('deleteFirebaseCheckboxWrapper').classList.remove('hidden');
             document.getElementById('deleteConfirmModal').classList.remove('hidden');
         }
 
@@ -1770,17 +2070,41 @@
             }
 
             pendingDeletePayload = { mode, indices: targetIndices };
+            document.getElementById('deleteConfirmTitle').innerText = "Konfirmasi Hapus Permanen";
             document.getElementById('deleteConfirmDesc').innerText =
-                `Anda akan menghapus permanen ${labelSumber}. Tindakan penghapusan di Firebase tidak dapat dibatalkan!`;
+                `Anda akan menghapus permanen ${labelSumber}. Tindakan penghapusan ini tidak dapat dibatalkan!`;
             document.getElementById('deleteConfirmDetailBox').innerHTML = `
                 <div>Total Target Hapus : <span class="text-white font-bold">${targetIndices.length.toLocaleString('id-ID')} kendaraan</span></div>
+                <div>Penyimpanan HP     : <span class="text-rose-300">Akan dihapus permanen</span></div>
                 <div>Status Firebase    : <span class="text-amber-300">${fbDb && fbUser ? 'Terhubung (Siap Hapus Cloud)' : 'Tidak Terhubung (Hanya Lokal)'}</span></div>
             `;
+            document.getElementById('deleteFirebaseCheckboxWrapper').classList.remove('hidden');
+            document.getElementById('deleteConfirmModal').classList.remove('hidden');
+        }
+
+        function konfirmasiResetStorageLokal() {
+            if (dataGabungan.length === 0) {
+                showToast("Penyimpanan lokal aplikasi sudah kosong.", "info");
+                return;
+            }
+            const allIndices = dataGabungan.map((_, idx) => idx);
+            pendingDeletePayload = { mode: 'clear_local_only', indices: allIndices };
+
+            document.getElementById('deleteConfirmTitle').innerText = "Kosongkan Memori Aplikasi di HP";
+            document.getElementById('deleteConfirmDesc').innerText =
+                "Seluruh file dan data yang tersimpan di penyimpanan lokal aplikasi akan dibersihkan (data di Firebase Cloud tidak akan dihapus kecuali Anda mencentang opsi di bawah).";
+            document.getElementById('deleteConfirmDetailBox').innerHTML = `
+                <div>Total Data di HP   : <span class="text-white font-bold">${dataGabungan.length.toLocaleString('id-ID')} kendaraan</span></div>
+                <div>Tindakan           : <span class="text-rose-300">Bersihkan Penyimpanan Permanen HP</span></div>
+            `;
+            document.getElementById('deleteFromFirebaseCheck').checked = false;
+            document.getElementById('deleteFirebaseCheckboxWrapper').classList.remove('hidden');
             document.getElementById('deleteConfirmModal').classList.remove('hidden');
         }
 
         function tutupModalHapus() {
             pendingDeletePayload = null;
+            document.getElementById('deleteFromFirebaseCheck').checked = true;
             document.getElementById('deleteConfirmModal').classList.add('hidden');
         }
 
@@ -1793,22 +2117,24 @@
 
             const deleteSet = new Set(indicesToDelete);
             const docIdsToDelete = [];
+            const uidsToDelete = [];
 
             indicesToDelete.forEach(idx => {
                 const item = dataGabungan[idx];
                 if (item) {
                     const docId = buatDocIdFirebase(item);
                     if (docId) docIdsToDelete.push(docId);
+                    if (item._uid) uidsToDelete.push(item._uid);
                 }
             });
 
-            // 1. Hapus permanen dari Firebase Cloud (jika dicentang & terhubung)
+            // 1. Hapus permanen dari Firebase Cloud (koleksi 'pencarian') jika dicentang
             let deletedCloudCount = 0;
             if (alsoDeleteFirebase && fbDb && fbUser && docIdsToDelete.length > 0) {
                 try {
                     const { doc, deleteDoc, writeBatch } = window.FB_SDK;
                     if (docIdsToDelete.length === 1) {
-                        const docRef = doc(fbDb, 'artifacts', appId, 'public', 'data', 'data_kendaraan', docIdsToDelete[0]);
+                        const docRef = doc(fbDb, KOLEKSI_DATA_NOPOL, docIdsToDelete[0]);
                         await deleteDoc(docRef);
                         deletedCloudCount = 1;
                     } else {
@@ -1818,7 +2144,7 @@
                             const chunk = docIdsToDelete.slice(i, i + chunkSize);
                             const batch = writeBatch(fbDb);
                             chunk.forEach(id => {
-                                const ref = doc(fbDb, 'artifacts', appId, 'public', 'data', 'data_kendaraan', id);
+                                const ref = doc(fbDb, KOLEKSI_DATA_NOPOL, id);
                                 batch.delete(ref);
                             });
                             await batch.commit();
@@ -1829,7 +2155,7 @@
                         }
                         hideProgress();
                     }
-                    log(`🔥 Berhasil menghapus permanen ${deletedCloudCount.toLocaleString('id-ID')} dokumen dari Firebase Cloud!`, "success");
+                    log(`🔥 Berhasil menghapus permanen ${deletedCloudCount.toLocaleString('id-ID')} dokumen dari koleksi '${KOLEKSI_DATA_NOPOL}'!`, "success");
                 } catch (err) {
                     hideProgress();
                     log(`❌ Gagal menghapus dari Firebase: ${err.message}`, "error");
@@ -1838,64 +2164,93 @@
                 }
             }
 
-            // 2. Hapus dari memori lokal (dataGabungan & dataLama)
-            const deletedDocIdSet = new Set(docIdsToDelete);
+            // 2. Hapus dari memori RAM & penyimpanan permanen IndexedDB aplikasi
             dataGabungan = dataGabungan.filter((_, idx) => !deleteSet.has(idx));
-            dataLama = dataLama.filter(item => {
-                const id = buatDocIdFirebase(item);
-                return !id || !deletedDocIdSet.has(id);
-            });
+            dataLama = [...dataGabungan];
             selectedIndices.clear();
+
+            if (dataGabungan.length === 0) {
+                await simpanSemuaKePenyimpananLokal([]);
+                document.getElementById('statusDataLama').innerHTML =
+                    `Penyimpanan lokal aplikasi kosong. Silakan impor berkas baru.`;
+                document.getElementById('hasilSection').classList.add('hidden');
+                document.getElementById('dataManagerSection').classList.add('hidden');
+            } else {
+                await hapusDariPenyimpananLokal(uidsToDelete);
+                document.getElementById('statusDataLama').innerHTML =
+                    `<span class="text-emerald-400 font-semibold">✅ Tersimpan Permanen di Aplikasi</span> -- <strong class="text-white">${dataGabungan.length.toLocaleString('id-ID')} kendaraan</strong> siap dicek & diedit kapan saja.`;
+            }
 
             document.getElementById('jmlDataLama').textContent = dataLama.length.toLocaleString('id-ID');
             perbaruiTampilanHasilDanManager();
 
-            if (dataGabungan.length === 0) {
-                document.getElementById('dataManagerSection').classList.add('hidden');
-            }
-
             const msgSukses = deletedCloudCount > 0
-                ? `${indicesToDelete.length.toLocaleString('id-ID')} data dihapus permanen dari Lokal & Firebase Cloud!`
-                : `${indicesToDelete.length.toLocaleString('id-ID')} data dihapus dari memori JSON lokal.`;
+                ? `${indicesToDelete.length.toLocaleString('id-ID')} data dihapus permanen dari Aplikasi & Firebase Cloud!`
+                : `${indicesToDelete.length.toLocaleString('id-ID')} data dihapus dari penyimpanan aplikasi.`;
             log(`🗑️ ${msgSukses}`, "success");
             showToast(msgSukses, "success", "Terhapus Permanen");
         }
 
         function updateEstimasiUkuran() {
             if (dataGabungan.length === 0) return;
-            const isPretty = document.getElementById('jsonFormatSelect').value === 'pretty';
-            const avgBytes = isPretty ? 780 : 430;
+            const formatMode = document.getElementById('jsonFormatSelect').value;
+            const avgBytes = formatMode === 'compact' ? 460 : 840;
             const estBytes = dataGabungan.length * avgBytes;
             document.getElementById('estimasiUkuranText').innerText = `Estimasi Ukuran: ~${formatUkuran(estBytes)}`;
+        }
+
+        // Helper serialisasi 1 potong slice sesuai format terpilih ('compact', 'pretty', atau 'offline_db')
+        function serialisasiPotonganData(slice, formatMode, startIndex, usedKeysSet) {
+            if (formatMode === 'offline_db') {
+                const entries = slice.map((item, idx) => {
+                    const globalIdx = startIndex + idx + 1;
+                    const rawKey = (item.nopol || item.plat_nomor || item.no_rangka || item.no_mesin || item.no_ktp || `DATA_${globalIdx}`)
+                        .replace(/[^a-zA-Z0-9]/g, '')
+                        .toUpperCase();
+                    let finalKey = rawKey || `DATA_${globalIdx}`;
+                    if (usedKeysSet.has(finalKey)) {
+                        finalKey = `${finalKey}_${globalIdx}`;
+                    }
+                    usedKeysSet.add(finalKey);
+                    const valJson = JSON.stringify(item, null, 2).replace(/\n/g, '\n  ');
+                    return `  ${JSON.stringify(finalKey)}: ${valJson}`;
+                });
+                return entries.join(',\n');
+            }
+
+            const isPretty = formatMode === 'pretty';
+            const chunkStr = isPretty ? JSON.stringify(slice, null, 2) : JSON.stringify(slice);
+            return isPretty ? chunkStr.slice(2, -2) : chunkStr.slice(1, -1);
         }
 
         // =========================================================================
         // 🚀 SOLUSI ANTI-TERPOTONG: DIRECT DISK STREAMING + NATIVE BYTE BLOB
         // =========================================================================
-        // Mengubah tiap 2.500 baris menjadi Uint8Array di memori native agar tidak
-        // pernah terpotong oleh batas memori string JS atau ukuran download browser.
-        async function buatBlobJsonBertahap(dataArray, isPretty = false, onProgress = null) {
+        async function buatBlobJsonBertahap(dataArray, formatMode = 'compact', onProgress = null) {
             const CHUNK_SIZE = 2500;
             const total = dataArray.length;
             const encoder = new TextEncoder();
-            const binaryChunks = [encoder.encode(isPretty ? '[\n' : '[')];
+            const isOfflineObj = formatMode === 'offline_db';
+            const isPretty = formatMode === 'pretty' || isOfflineObj;
+            const usedKeysSet = new Set();
+
+            const openBracket = isOfflineObj ? '{\n' : (isPretty ? '[\n' : '[');
+            const closeBracket = isOfflineObj ? '\n}' : (isPretty ? '\n]' : ']');
             const sepBytes = encoder.encode(isPretty ? ',\n' : ',');
+
+            const binaryChunks = [encoder.encode(openBracket)];
 
             for (let i = 0; i < total; i += CHUNK_SIZE) {
                 const end = Math.min(i + CHUNK_SIZE, total);
                 const slice = dataArray.slice(i, end);
 
-                let chunkStr = isPretty
-                    ? JSON.stringify(slice, null, 2)
-                    : JSON.stringify(slice);
-
-                chunkStr = isPretty ? chunkStr.slice(2, -2) : chunkStr.slice(1, -1);
+                let chunkStr = serialisasiPotonganData(slice, formatMode, i, usedKeysSet);
 
                 if (i > 0) {
                     binaryChunks.push(sepBytes);
                 }
                 binaryChunks.push(encoder.encode(chunkStr));
-                chunkStr = null; // Lepas string dari V8 heap segera
+                chunkStr = null;
 
                 if (onProgress) {
                     const pct = Math.round((end / total) * 100);
@@ -1905,22 +2260,26 @@
                 await new Promise(r => setTimeout(r, 0));
             }
 
-            binaryChunks.push(encoder.encode(isPretty ? '\n]' : ']'));
+            binaryChunks.push(encoder.encode(closeBracket));
             const finalBlob = new Blob(binaryChunks, { type: 'application/json;charset=utf-8' });
-            binaryChunks.length = 0; // Kosongkan array referensi
+            binaryChunks.length = 0;
+            usedKeysSet.clear();
             return finalBlob;
         }
 
         // Menulis langsung ke disk (Harddisk/Storage) tanpa menumpuk di RAM
-        async function streamLangsungKeDisk(fileHandle, dataArray, isPretty, onProgress) {
+        async function streamLangsungKeDisk(fileHandle, dataArray, formatMode, onProgress) {
             const writable = await fileHandle.createWritable();
             const CHUNK_SIZE = 2500;
             const total = dataArray.length;
             let totalBytesWritten = 0;
             const encoder = new TextEncoder();
+            const isOfflineObj = formatMode === 'offline_db';
+            const isPretty = formatMode === 'pretty' || isOfflineObj;
+            const usedKeysSet = new Set();
 
             try {
-                const header = isPretty ? '[\n' : '[';
+                const header = isOfflineObj ? '{\n' : (isPretty ? '[\n' : '[');
                 await writable.write(header);
                 totalBytesWritten += encoder.encode(header).byteLength;
 
@@ -1928,11 +2287,7 @@
                     const end = Math.min(i + CHUNK_SIZE, total);
                     const slice = dataArray.slice(i, end);
 
-                    let chunkStr = isPretty
-                        ? JSON.stringify(slice, null, 2)
-                        : JSON.stringify(slice);
-
-                    chunkStr = isPretty ? chunkStr.slice(2, -2) : chunkStr.slice(1, -1);
+                    let chunkStr = serialisasiPotonganData(slice, formatMode, i, usedKeysSet);
                     const payload = (i > 0 ? (isPretty ? ',\n' : ',') : '') + chunkStr;
 
                     await writable.write(payload);
@@ -1947,11 +2302,12 @@
                     await new Promise(r => setTimeout(r, 0));
                 }
 
-                const footer = isPretty ? '\n]' : ']';
+                const footer = isOfflineObj ? '\n}' : (isPretty ? '\n]' : ']');
                 await writable.write(footer);
                 totalBytesWritten += encoder.encode(footer).byteLength;
 
                 await writable.close();
+                usedKeysSet.clear();
                 return totalBytesWritten;
             } catch (err) {
                 try { await writable.abort(); } catch (e) {}
@@ -1977,7 +2333,6 @@
             manualLink.download = filename;
             readyBox.classList.remove('hidden');
 
-            // Picu unduhan otomatis
             const a = document.createElement('a');
             a.href = url;
             a.download = filename;
@@ -1997,11 +2352,10 @@
                 return;
             }
 
-            const isPretty = document.getElementById('jsonFormatSelect').value === 'pretty';
+            const formatMode = document.getElementById('jsonFormatSelect').value;
             const total = dataGabungan.length;
-            const fileName = 'data_kendaraan.json';
+            const fileName = formatMode === 'offline_db' ? 'offline_samsat_database.json' : 'data_kendaraan.json';
 
-            // 1. Coba Direct Disk Streaming (showSaveFilePicker) jika didukung browser (paling aman untuk ratusan ribu data)
             if (typeof window.showSaveFilePicker === 'function') {
                 try {
                     const fileHandle = await window.showSaveFilePicker({
@@ -2016,7 +2370,7 @@
                     log(`💾 Menyimpan langsung ${total.toLocaleString('id-ID')} data ke penyimpanan perangkat...`, "info");
                     updateProgressStatus("Menulis file JSON langsung ke penyimpanan (0%)...", 0);
 
-                    const writtenBytes = await streamLangsungKeDisk(fileHandle, dataGabungan, isPretty, (pct, done, all) => {
+                    const writtenBytes = await streamLangsungKeDisk(fileHandle, dataGabungan, formatMode, (pct, done, all) => {
                         updateProgressStatus(`Menulis ke Disk: ${done.toLocaleString('id-ID')} / ${all.toLocaleString('id-ID')} baris (${pct}%)`, pct);
                     });
 
@@ -2031,18 +2385,16 @@
                         log("ℹ️ Penyimpanan file dibatalkan oleh pengguna.", "info");
                         return;
                     }
-                    // Jika SecurityError (misal di dalam iframe Preview), lanjut otomatis ke metode Native Byte Blob
                 }
             }
 
-            // 2. Fallback Native Byte Blob + Tombol Simpan Langsung (Untuk HP / Iframe / Safari / Firefox)
             sedangDownload = true;
-            log(`📥 Merakit ${total.toLocaleString('id-ID')} data JSON (${isPretty ? 'Pretty' : 'Compact'}) ke memori biner...`, "info");
+            log(`📥 Merakit ${total.toLocaleString('id-ID')} data JSON (${formatMode}) ke memori biner...`, "info");
             showToast("Merakit seluruh data JSON (100% utuh), mohon tunggu...", "info");
             updateProgressStatus("Merakit file JSON (0%)...", 0);
 
             try {
-                const blob = await buatBlobJsonBertahap(dataGabungan, isPretty, (pct, done, all) => {
+                const blob = await buatBlobJsonBertahap(dataGabungan, formatMode, (pct, done, all) => {
                     updateProgressStatus(`Merakit JSON: ${done.toLocaleString('id-ID')} / ${all.toLocaleString('id-ID')} baris (${pct}%)`, pct);
                 });
 
@@ -2077,7 +2429,7 @@
 
             sedangDownload = true;
             const batchSize = parseInt(document.getElementById('batchSplitSize').value, 10) || 50000;
-            const isPretty = document.getElementById('jsonFormatSelect').value === 'pretty';
+            const formatMode = document.getElementById('jsonFormatSelect').value;
             const total = dataGabungan.length;
             const totalParts = Math.ceil(total / batchSize);
 
@@ -2093,7 +2445,7 @@
                     const end = Math.min(start + batchSize, total);
                     const subData = dataGabungan.slice(start, end);
 
-                    const blobPart = await buatBlobJsonBertahap(subData, isPretty);
+                    const blobPart = await buatBlobJsonBertahap(subData, formatMode);
                     const fileName = `data_kendaraan_part_${String(part + 1).padStart(2, '0')}.json`;
                     zip.file(fileName, blobPart);
 
